@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UDAAN - Home</title>
+    <link rel="stylesheet" href="home.css">
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="brand">UDAAN</div>
+
+    <div class="search">
+        <input id="searchInput" type="text" placeholder="Search creators, videos...">
+        <button id="searchBtn">🔍</button>
+    </div>
+
+    <div class="top-actions">
+        <button id="notificationBtn">🔔</button>
+<div id="notificationPanel" class="notification-panel">
+    <div class="notification-header">
+        <strong>Notifications</strong>
+        <button id="closeNotifications">✕</button>
+    </div>
+    <div id="notificationList">
+        <p>No notifications yet.</p>
+    </div>
+</div>
+        <button id="profileBtn">👤</button>
+    </div>
+</header>
+
+<nav class="categories">
+    <button class="active">All</button>
+    <button>Trending</button>
+    <button>Music</button>
+    <button>Gaming</button>
+    <button>Education</button>
+    <button>Technology</button>
+    <button>Comedy</button>
+    <button>Vlogs</button>
+</nav>
+
+<main>
+
+<section class="welcome">
+    <div>
+        <h1>Welcome to UDAAN 🚀</h1>
+        <p>Discover creators. Watch. Support. Grow together.</p>
+    </div>
+</section>
+
+<section>
+    <div class="section-title">
+        <h2>🔥 Trending</h2>
+        <span>See all</span>
+    </div>
+
+    <div class="videos">
+
+        <article class="video">
+            <div class="thumbnail">▶️</div>
+            <div class="video-info">
+                <div class="avatar">A</div>
+                <div>
+                    <h3>Welcome to UDAAN</h3>
+                    <p>UDAAN Official</p>
+                    <small>125K views • 2 hours ago</small>
+                </div>
+            </div>
+        </article>
+
+        <article class="video">
+            <div class="thumbnail">🎬</div>
+            <div class="video-info">
+                <div class="avatar">C</div>
+                <div>
+                    <h3>My First Video on UDAAN</h3>
+                    <p>Creator World</p>
+                    <small>48K views • 5 hours ago</small>
+                </div>
+            </div>
+        </article>
+
+    </div>
+</section>
+
+<section>
+    <div class="section-title">
+        <h2>🌟 Rising Creators</h2>
+        <span>Discover</span>
+    </div>
+
+    <div class="creators">
+
+        <div class="creator">
+            <div class="creator-avatar">R</div>
+            <h3>Rahul Vlogs</h3>
+            <p>1.2K subscribers</p>
+            <button>View Channel</button>
+        </div>
+
+        <div class="creator">
+            <div class="creator-avatar">S</div>
+            <h3>Smart Study</h3>
+            <p>850 subscribers</p>
+            <button>View Channel</button>
+        </div>
+
+        <div class="creator">
+            <div class="creator-avatar">M</div>
+            <h3>Music Beats</h3>
+            <p>640 subscribers</p>
+            <button>View Channel</button>
+        </div>
+
+    </div>
+</section>
+
+<section>
+    <div class="section-title">
+        <h2>🎬 Recommended for you</h2>
+    </div>
+
+            <div class="thumbnail">🎮</div>
+            <div class="video-info">
+                <div class="avatar">G</div>
+                <div>
+                    <h3>Best Gaming Moments</h3>
+                    <p>Gaming Zone</p>
+                    <small>25K views • 1 day ago</small>
+                </div>
+            </div>
+        </article>
+
+        <article class="video">
+            <div class="thumbnail">📚</div>
+            <div class="video-info">
+                <div class="avatar">E</div>
+                <div>
+                    <h3>Learn Something New Today</h3>
+                    <p>Education Hub</p>
+                    <small>12K views • 1 day ago</small>
+                </div>
+            </div>
+        </article>
+
+    </div>
+</section>
+
+</main>
+
+<nav class="bottom-nav">
+
+    <button class="selected">
+        <strong>⌂</strong>
+        <span>Home</span>
+    </button>
+
+    <button>
+        <strong>▶</strong>
+        <span>Shorts</span>
+    </button>
+
+    <button class="create" id="createBtn">
+        <strong>＋</strong>
+        <span>Create</span>
+    </button>
+
+    <button>
+        <strong>▣</strong>
+        <span>Following</span>
+    </button>
+
+    <button id="bottomProfile">
+        <strong>👤</strong>
+        <span>Profile</span>
+    </button>
+
+</nav>
+
+<script src="home.js"></script>
+
+</body>
+</html>

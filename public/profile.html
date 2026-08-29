@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UDAAN - Profile</title>
+    <link rel="stylesheet" href="profile.css">
+</head>
+
+<body>
+
+<header>
+    <button onclick="history.back()">←</button>
+    <h2>Profile</h2>
+</header>
+
+<main>
+
+    <section class="profile-card">
+
+        <div class="avatar-wrap">
+            <img id="profilePhoto" class="profile-photo" alt="Profile Photo">
+            <div class="avatar" id="avatar">A</div>
+        </div>
+
+        <input
+            type="file"
+            id="photoInput"
+            accept="image/jpeg,image/png,image/webp"
+            hidden
+        >
+
+        <button id="changePhotoBtn" class="change-photo-btn">
+            📸 Change Photo
+        </button>
+
+        <button id="removePhotoBtn" class="remove-photo-btn">
+            🗑️ Remove Photo
+        </button>
+
+        <button id="avatarBtn" class="avatar-btn">
+            🎨 Choose Avatar
+        </button>
+
+        <div id="avatarPanel" class="avatar-panel">
+            <h3>Choose your avatar</h3>
+
+            <div class="avatar-options">
+                <button class="avatar-option" data-avatar="😀">😀</button>
+                <button class="avatar-option" data-avatar="😎">😎</button>
+                <button class="avatar-option" data-avatar="🤩">🤩</button>
+                <button class="avatar-option" data-avatar="😇">😇</button>
+                <button class="avatar-option" data-avatar="🥳">🥳</button>
+                <button class="avatar-option" data-avatar="😄">😄</button>
+                <button class="avatar-option" data-avatar="🦁">🦁</button>
+                <button class="avatar-option" data-avatar="🐯">🐯</button>
+                <button class="avatar-option" data-avatar="🐼">🐼</button>
+                <button class="avatar-option" data-avatar="🐨">🐨</button>
+                <button class="avatar-option" data-avatar="🚀">🚀</button>
+                <button class="avatar-option" data-avatar="⭐">⭐</button>
+            </div>
+        </div>
+
+        <h1 id="name">Loading...</h1>
+        <p id="username">@username</p>
+
+        <button id="subscribeBtn" class="subscribe-btn">
+            Subscribe
+        </button>
+
+        <button id="logoutBtn" class="logout-btn">
+            Logout
+        </button>
+
+        <button id="editProfileBtn" class="edit-profile-btn">
+            ⚙️ Edit Profile
+        </button>
+
+        <div id="editProfilePanel" class="edit-profile-panel">
+            <h3>Edit Profile</h3>
+
+            <label>Name</label>
+            <input id="editName" type="text" placeholder="Your name">
+
+            <label>Username</label>
+            <input id="editUsername" type="text" placeholder="Username">
+
+            <div class="edit-profile-actions">
+                <button id="saveProfileBtn">💾 Save Changes</button>
+                <button id="cancelEditBtn">Cancel</button>
+            </div>
+
+            <p id="editProfileMessage"></p>
+        </div>
+
+        <div class="stats">
+            <div>
+                <strong id="videos">0</strong>
+                <span>Videos</span>
+            </div>
+
+            <div>
+                <strong id="views">0</strong>
+                <span>Views</span>
+            </div>
+
+            <div>
+                <strong id="likes">0</strong>
+                <span>Likes</span>
+            </div>
+
+            <div>
+                <strong id="subscribers">0</strong>
+                <span>Subscribers</span>
+            </div>
+
+            <div>
+                <strong id="watchMinutes">0</strong>
+                <span>Watch Minutes</span>
+            </div>
+
+            <div>
+                <strong id="tokens">0</strong>
+                <span>Tokens</span>
+            </div>
+        </div>
+
+    </section>
+
+    <section class="videos-section">
+
+        <h2>My Videos</h2>
+
+        <div id="videoList">
+            <p>Loading videos...</p>
+        </div>
+
+    </section>
+
+</main>
+
+<script>
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    localStorage.removeItem("udaan_user");
+    window.location.href = "/login.html";
+});
+
+
+
+async function setupSubscribe(username) {
+
+    const button = document.getElementById("subscribeBtn");
+
+    if (!button) return;
+
+    const savedUser = localStorage.getItem("udaan_user");
+
+    if (!savedUser) {
+        button.style.display = "none";
+        return;
+    }
+
+    let currentUser;
+
+    try {
+        currentUser = JSON.parse(savedUser);
+    } catch (error) {
+        button.style.display = "none";
+        return;
+    }
+
+    if (!currentUser.username || currentUser.username === username) {
+        button.textContent = "Your Profile";
+        button.disabled = true;
+        return;
+    }
+
+    try {
+        const statusResponse = await fetch(
+            `/api/profile/${encodeURIComponent(username)}/subscription-status?subscriber=${encodeURIComponent(currentUser.username)}`
+        );
+
+        const statusResult = await statusResponse.json();
+
+        if (statusResponse.ok) {
+            button.dataset.subscribed =
+                statusResult.subscribed ? "true" : "false";
+
+            button.textContent =
+                statusResult.subscribed
+                    ? "Subscribed ✓"
+                    : "Subscribe";
+        }
+    } catch (error) {
+        console.error("Subscription status error:", error);
+    }
+
+    button.addEventListener("click", async () => {
+
+        const isSubscribed =
+            button.dataset.subscribed === "true";
+
+        const endpoint = isSubscribed
+            ? `/api/profile/${encodeURIComponent(username)}/unsubscribe`
+            : `/api/profile/${encodeURIComponent(username)}/subscribe`;
+
+        button.disabled = true;
+        button.textContent = "Please wait...";
+
+        try {
+
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    subscriber: currentUser.username
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || "Request failed"
+                );
+            }
+
+            button.dataset.subscribed =
+                result.subscribed ? "true" : "false";
+
+            button.textContent =
+                result.subscribed
+                    ? "Subscribed ✓"
+                    : "Subscribe";
+
+            document.getElementById("subscribers").textContent =
+                result.subscribers || 0;
+
+        } catch (error) {
+
+            console.error(error);
+
+            button.textContent =
+                isSubscribed
+                    ? "Subscribed ✓"
+                    : "Subscribe";
+
+            alert(error.message);
+
+        } finally {
+
+            button.disabled = false;
+        }
+    });
+}
+
+
+async function loadProfile() {
+
+    try {
+
+        const savedUser = localStorage.getItem("udaan_user");
+
+        if (!savedUser) {
+            document.getElementById("name").textContent = "Not logged in";
+            return;
+        }
+
+        const user = JSON.parse(savedUser);
+
+        const params = new URLSearchParams(window.location.search);
+
+        const profileUsername =
+            params.get("username") || user.username;
+
+        const response = await fetch(
+            `/api/profile/${encodeURIComponent(profileUsername)}`
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Profile loading failed");
+        }
+
+        const profile = result.profile;
+
+        document.getElementById("name").textContent = profile.name;
+        document.getElementById("username").textContent =
+            "@" + profile.username;
+
+        const savedAvatar = profile.avatar;
+
+        if (savedAvatar && !profile.profile_photo) {
+            document.getElementById("avatar").textContent =
+                savedAvatar;
+        } else {
+            document.getElementById("avatar").textContent =
+                profile.name.charAt(0).toUpperCase();
+        }
+
+        const savedProfilePhoto = profile.profile_photo;
+
+        if (savedProfilePhoto) {
+            profilePhoto.src =
+                savedProfilePhoto + "?t=" + Date.now();
+
+            profilePhoto.classList.add("visible");
+            profilePhoto.parentElement.classList.add("photo-active");
+        }
+
+        document.getElementById("videos").textContent =
+            profile.videos || 0;
+
+        document.getElementById("views").textContent =
+            profile.totalViews || 0;
+
+        document.getElementById("likes").textContent =
+            profile.totalLikes || 0;
+
+        document.getElementById("subscribers").textContent =
+            profile.subscribers || 0;
+
+        document.getElementById("watchMinutes").textContent =
+            profile.watch_minutes || 0;
+
+        document.getElementById("tokens").textContent =
+            profile.tokens || 0;
+
+        await Promise.all([
+            setupSubscribe(profile.username),
+            loadVideos(profile.username)
+        ]);
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("name").textContent =
+            "Profile loading failed";
+    }
+}
+
+
+async function loadVideos(username) {
+
+    const videoList = document.getElementById("videoList");
+
+    try {
+
+        const response = await fetch("/api/videos");
+        const videos = await response.json();
+
+        const myVideos = videos.filter(
+            video => video.username === username
+        );
+
+        if (myVideos.length === 0) {
+            videoList.innerHTML =
+                "<p>No videos uploaded yet.</p>";
+            return;
+        }
+
+        videoList.innerHTML = "";
+
+        myVideos.forEach(video => {
+
+            const card = document.createElement("div");
+
+            card.className = "video-card";
+
+            card.innerHTML = `
+                <div class="video-player-wrap">
+                    <video
+                        controls
+                        preload="metadata"
+                        src="${video.qualities?.original || `/uploads/${encodeURIComponent(video.filename)}`}">
+                    </video>
+
+                    <div class="quality-control">
+                        <button class="quality-btn" type="button">⚙️ Quality</button>
+                        <select class="quality-select">
+                            <option value="auto">Auto</option>
+                            ${video.qualities?.["360p"] ? '<option value="360p">360p</option>' : ''}
+                            ${video.qualities?.["480p"] ? '<option value="480p">480p</option>' : ''}
+                            ${video.qualities?.["720p"] ? '<option value="720p">720p</option>' : ''}
+                            ${video.qualities?.["1080p"] ? '<option value="1080p">1080p</option>' : ''}
+                        </select>
+                    </div>
+                </div>
+
+                <h3></h3>
+
+                <p></p>
+
+                <small>
+                    👁️ ${video.views || 0} views
+                    &nbsp; ❤️ ${video.likes || 0} likes
+                    &nbsp; 💬 ${(video.comments || []).length} comments
+                </small>
+            `;
+
+            card.querySelector("h3").textContent =
+                video.title;
+
+            card.querySelector("p").textContent =
+                video.description || "";
+
+            const player = card.querySelector("video");
+            const qualitySelect = card.querySelector(".quality-select");
+
+            if (qualitySelect && video.qualities) {
+                qualitySelect.addEventListener("change", () => {
+                    const selectedQuality = qualitySelect.value;
+
+                    let newSource = video.qualities.original;
+
+                    if (
+                        selectedQuality !== "auto" &&
+                        video.qualities[selectedQuality]
+                    ) {
+                        newSource = video.qualities[selectedQuality];
+                    }
+
+                    const currentTime = player.currentTime;
+                    const wasPlaying = !player.paused;
+
+                    player.src = newSource;
+                    player.load();
+
+                    player.addEventListener("loadedmetadata", () => {
+                        if (currentTime < player.duration) {
+                            player.currentTime = currentTime;
+                        }
+
+                        if (wasPlaying) {
+                            player.play().catch(() => {});
+                        }
+                    }, { once: true });
+                });
+            }
+
+            videoList.appendChild(card);
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        videoList.innerHTML =
+            "<p>Videos load nahi ho paaye.</p>";
+    }
+}
+
+
+
+
+const avatarBtn = document.getElementById("avatarBtn");
+const avatarPanel = document.getElementById("avatarPanel");
+const avatarOptions = document.querySelectorAll(".avatar-option");
+
+avatarBtn?.addEventListener("click", () => {
+    avatarPanel?.classList.toggle("show");
+});
+
+avatarOptions.forEach(option => {
+    option.addEventListener("click", () => {
+
+        const selectedAvatar = option.dataset.avatar;
+
+        if (!selectedAvatar) return;
+
+        const savedUser = localStorage.getItem("udaan_user");
+
+        if (!savedUser) {
+            alert("Please login first.");
+            return;
+        }
+
+        const currentUser = JSON.parse(savedUser);
+
+        try {
+
+            const response = await fetch(
+                `/api/profile/${encodeURIComponent(currentUser.username)}/avatar`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        avatar: selectedAvatar
+                    })
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.message || "Avatar save failed"
+                );
+            }
+
+            avatarElement.textContent = result.avatar;
+
+            profilePhoto.src = "";
+            profilePhoto.classList.remove("visible");
+            profilePhoto.parentElement.classList.remove("photo-active");
+
+            currentUser.avatar = result.avatar;
+
+            localStorage.setItem(
+                "udaan_user",
+                JSON.stringify(currentUser)
+            );
+
+            avatarPanel?.classList.remove("show");
+
+            alert("Avatar saved successfully ✅");
+
+        } catch (error) {
+
+            console.error("Avatar save error:", error);
+            alert(error.message);
+        }
+    });
+});
+
+const removePhotoBtn = document.getElementById("removePhotoBtn");
+
+removePhotoBtn?.addEventListener("click", async () => {
+
+    const savedUser = localStorage.getItem("udaan_user");
+
+    if (!savedUser) {
+        alert("Please login first.");
+        return;
+    }
+
+    const currentUser = JSON.parse(savedUser);
+
+    if (!confirm("Profile photo remove karni hai?")) {
+        return;
+    }
+
+    removePhotoBtn.disabled = true;
+    removePhotoBtn.textContent = "Removing...";
+
+    try {
+
+        const response = await fetch(
+            `/api/profile/${encodeURIComponent(currentUser.username)}/photo`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(
+                result.message || "Photo remove failed"
+            );
+        }
+
+        profilePhoto.src = "";
+        profilePhoto.classList.remove("visible");
+        profilePhoto.parentElement.classList.remove("photo-active");
+
+        avatarElement.textContent =
+            (document.getElementById("name")?.textContent || "U")
+            .charAt(0)
+            .toUpperCase();
+
+        alert("Profile photo removed successfully ✅");
+
+    } catch (error) {
+
+        console.error("Remove photo error:", error);
+        alert(error.message);
+
+    } finally {
+
+        removePhotoBtn.disabled = false;
+        removePhotoBtn.textContent = "🗑️ Remove Photo";
+    }
+});
+
+const changePhotoBtn = document.getElementById("changePhotoBtn");
+const photoInput = document.getElementById("photoInput");
+const profilePhoto = document.getElementById("profilePhoto");
+const avatarElement = document.getElementById("avatar");
+
+changePhotoBtn?.addEventListener("click", () => {
+    photoInput?.click();
+});
+
+photoInput?.addEventListener("change", async () => {
+
+    const file = photoInput.files?.[0];
+
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+        alert("Photo 5 MB se chhoti honi chahiye.");
+        photoInput.value = "";
+        return;
+    }
+
+    const savedUser = localStorage.getItem("udaan_user");
+
+    if (!savedUser) {
+        alert("Please login first.");
+        return;
+    }
+
+    const currentUser = JSON.parse(savedUser);
+
+    const formData = new FormData();
+    formData.append("photo", file);
+
+    changePhotoBtn.disabled = true;
+    changePhotoBtn.textContent = "Uploading...";
+
+    try {
+
+        const response = await fetch(
+            `/api/profile/${encodeURIComponent(currentUser.username)}/photo`,
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(
+                result.message || "Photo upload failed"
+            );
+        }
+
+        profilePhoto.src =
+            result.profile_photo + "?t=" + Date.now();
+
+        profilePhoto.classList.add("visible");
+
+        profilePhoto.parentElement.classList.add("photo-active");
+
+        alert("Profile photo updated successfully ✅");
+
+    } catch (error) {
+
+        console.error("Photo upload error:", error);
+        alert(error.message);
+
+    } finally {
+
+        changePhotoBtn.disabled = false;
+        changePhotoBtn.textContent = "📸 Change Photo";
+        photoInput.value = "";
+    }
+});
+
+loadProfile();
+
+
+/* LOGOUT */
+
+
+
+
+/* EDIT PROFILE */
+
+const editProfileBtn = document.getElementById("editProfileBtn");
+const editProfilePanel = document.getElementById("editProfilePanel");
+const editName = document.getElementById("editName");
+const editUsername = document.getElementById("editUsername");
+const saveProfileBtn = document.getElementById("saveProfileBtn");
+const cancelEditBtn = document.getElementById("cancelEditBtn");
+const editProfileMessage = document.getElementById("editProfileMessage");
+
+editProfileBtn?.addEventListener("click", () => {
+    const name = document.getElementById("name")?.textContent || "";
+    const username = document.getElementById("username")?.textContent || "";
+
+    editName.value = name.trim();
+    editUsername.value = username.replace(/^@/, "").trim();
+
+    editProfilePanel.classList.add("show");
+    editProfileMessage.textContent = "";
+});
+
+cancelEditBtn?.addEventListener("click", () => {
+    editProfilePanel.classList.remove("show");
+    editProfileMessage.textContent = "";
+});
+
+saveProfileBtn?.addEventListener("click", async () => {
+
+    const savedUser = localStorage.getItem("udaan_user");
+
+    if (!savedUser) {
+        editProfileMessage.textContent = "Please login first.";
+        return;
+    }
+
+    const currentUser = JSON.parse(savedUser);
+
+    const name = editName.value.trim();
+    const username = editUsername.value.trim();
+
+    if (!name || !username) {
+        editProfileMessage.textContent =
+            "Name and username are required.";
+        return;
+    }
+
+    saveProfileBtn.disabled = true;
+    saveProfileBtn.textContent = "Saving...";
+
+    try {
+
+        const response = await fetch(
+            `/api/profile/${encodeURIComponent(currentUser.username)}/edit`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name,
+                    username
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            editProfileMessage.textContent =
+                result.message || "Profile update failed.";
+            return;
+        }
+
+        localStorage.setItem(
+            "udaan_user",
+            JSON.stringify(result.user)
+        );
+
+        document.getElementById("name").textContent =
+            result.user.name;
+
+        document.getElementById("username").textContent =
+            "@" + result.user.username;
+
+        document.getElementById("avatar").textContent =
+            result.user.name.charAt(0).toUpperCase();
+
+        editProfileMessage.textContent =
+            "Profile updated successfully ✅";
+
+        setTimeout(() => {
+            editProfilePanel.classList.remove("show");
+        }, 1000);
+
+    } catch (error) {
+
+        console.error("Edit profile error:", error);
+
+        editProfileMessage.textContent =
+            "Something went wrong.";
+
+    } finally {
+
+        saveProfileBtn.disabled = false;
+        saveProfileBtn.textContent = "💾 Save Changes";
+    }
+});
+
+
+</script>
+
+</body>
+</html>
+

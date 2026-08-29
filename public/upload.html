@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UDAAN - Upload</title>
+    <link rel="stylesheet" href="upload.css">
+</head>
+
+<body>
+
+<header>
+    <button onclick="history.back()">←</button>
+    <h2>Create</h2>
+</header>
+
+<main>
+
+    <div class="upload-box">
+        <div class="upload-icon">🎬</div>
+        <h1>Upload your video</h1>
+        <p>Share your creativity with the UDAAN community</p>
+
+        <label class="file-btn">
+            Select Video
+            <input type="file" id="videoFile" accept="video/*" hidden>
+        </label>
+
+        <p id="fileName">No video selected</p>
+    </div>
+
+    <div class="form">
+
+        <label>Video Title</label>
+        <input id="title" type="text" placeholder="Enter your video title">
+
+        <label>Description</label>
+        <textarea id="description" placeholder="Tell viewers about your video"></textarea>
+
+        <label>Category</label>
+        <select id="category">
+            <option value="">Select category</option>
+            <option>Entertainment</option>
+            <option>Music</option>
+            <option>Gaming</option>
+            <option>Education</option>
+            <option>Technology</option>
+            <option>Comedy</option>
+            <option>Vlog</option>
+            <option>Other</option>
+        </select>
+
+        <button id="uploadBtn">🚀 Publish on UDAAN</button>
+
+        <p id="message"></p>
+
+    </div>
+
+</main>
+
+<script>
+const videoFile = document.getElementById('videoFile');
+const fileName = document.getElementById('fileName');
+const uploadBtn = document.getElementById('uploadBtn');
+const message = document.getElementById('message');
+
+videoFile.addEventListener('change', () => {
+    if (videoFile.files.length > 0) {
+        fileName.textContent = videoFile.files[0].name;
+    }
+});
+
+uploadBtn.addEventListener('click', async () => {
+
+    const file = videoFile.files[0];
+    const title = document.getElementById('title').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const category = document.getElementById('category').value;
+
+    if (!file) {
+        message.textContent = "Please select a video.";
+        return;
+    }
+
+    if (!title) {
+        message.textContent = "Please enter video title.";
+        return;
+    }
+
+    if (!category) {
+        message.textContent = "Please select a category.";
+        return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("video", file);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("category", category);
+
+    const savedUser = localStorage.getItem("udaan_user");
+
+    if (savedUser) {
+        try {
+            const user = JSON.parse(savedUser);
+
+            if (user.username) {
+                formData.append("username", user.username);
+            }
+        } catch (error) {
+            console.error("User data error:", error);
+        }
+    }
+
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = "Uploading... ⏳";
+    message.textContent = "Video upload ho raha hai...";
+
+    try {
+
+        const response = await fetch("/api/videos/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Upload failed");
+        }
+
+        message.textContent = "✅ Video successfully uploaded on UDAAN! 🚀";
+
+        console.log("Uploaded video:", result.video);
+
+        uploadBtn.textContent = "✅ Published";
+
+        setTimeout(() => {
+            window.location.href = "/home.html";
+        }, 1000);
+
+    } catch (error) {
+
+        message.textContent = "❌ " + error.message;
+
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = "🚀 Publish on UDAAN";
+    }
+});
+</script>
+
+</body>
+</html>

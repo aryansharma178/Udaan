@@ -1,0 +1,85 @@
+const fs = require('fs');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const USERS_FILE = './users.json';
+const JWT_SECRET = 'UDAAN_SECRET_CHANGE_THIS_LATER';
+
+function getUsers() {
+    if (!fs.existsSync(USERS_FILE)) {
+        fs.writeFileSync(USERS_FILE, '[]');
+    }
+    return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+}
+
+function saveUsers(users) {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+}
+
+async function signup(name, username, password) {
+    const users = getUsers();
+
+    if (users.some(u => u.username === username)) {
+        throw new Error('Username already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = {
+        id: Date.now(),
+        name,
+        username,
+        password: hashedPassword,
+        subscribers: 0,
+        watch_minutes: 0,
+        tokens: 0,
+        created_at: new Date().toISOString()
+    };
+
+    users.push(user);
+    saveUsers(users);
+
+    return {
+        id: user.id,
+        name: user.name,
+        username: user.username
+    };
+}
+
+async function login(username, password) {
+    const users = getUsers();
+    const user = users.find(u => u.username === username);
+
+    if (!user) {
+        throw new Error('Invalid username or password');
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+
+    if (!valid) {
+        throw new Error('Invalid username or password');
+    }
+
+    const token = jwt.sign(
+        {
+            id: user.id,
+            username: user.username
+        },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+    );
+
+    return {
+        token,
+        user: {
+            id: user.id,
+            name: user.name,
+            username: user.username
+        }
+    };
+}
+
+module.exports = {
+    signup,
+    login
+};

@@ -1,0 +1,269 @@
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const router = express.Router();
+
+const uploadDir = path.join(__dirname, '../uploads');
+
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+
+    filename: (req, file, cb) => {
+        const uniqueName =
+            Date.now() + '-' +
+            Math.round(Math.random() * 1E9) +
+            path.extname(file.originalname);
+
+        cb(null, uniqueName);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 500 * 1024 * 1024
+    }
+});
+
+router.post('/upload', upload.single('video'), (req, res) => {
+
+    try {
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Video file is required'
+            });
+        }
+
+        const video = {
+            id: Date.now().toString(),
+            username: req.body.username || 'unknown',
+            title: req.body.title || '',
+            description: req.body.description || '',
+            category: req.body.category || '',
+            filename: req.file.filename,
+            originalName: req.file.originalname,
+            size: req.file.size,
+            uploadedAt: new Date().toISOString(),
+            views: 0,
+            watchMinutes: 0,
+            tokens: 0
+        };
+
+        const dataFile = path.join(__dirname, '../videos.json');
+
+        let videos = [];
+
+        if (fs.existsSync(dataFile)) {
+            videos = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+        }
+
+        videos.push(video);
+
+        fs.writeFileSync(
+            dataFile,
+            JSON.stringify(videos, null, 2)
+        );
+
+        res.json({
+            success: true,
+            message: 'Video uploaded successfully 🚀',
+            video: video
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Video upload failed'
+        });
+
+    }
+
+});
+
+router.post('/:id/view', (req, res) => {
+    try {
+        const dataFile = path.join(__dirname, '../videos.json');
+
+        if (!fs.existsSync(dataFile)) {
+            return res.status(404).json({
+                success: false,
+                message: 'Video not found'
+            });
+        }
+
+        const videos = JSON.parse(
+            fs.readFileSync(dataFile, 'utf8')
+        );
+
+        const video = videos.find(v => v.id === req.params.id);
+
+        if (!video) {
+            return res.status(404).json({
+                success: false,
+                message: 'Video not found'
+            });
+        }
+
+        video.views = (video.views || 0) + 1;
+
+        fs.writeFileSync(
+            dataFile,
+            JSON.stringify(videos, null, 2)
+        );
+
+        res.json({
+            success: true,
+            views: video.views
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'View update failed'
+        });
+    }
+});
+
+router.post('/:id/like', (req, res) => {
+    try {
+        const dataFile = path.join(__dirname, '../videos.json');
+
+        if (!fs.existsSync(dataFile)) {
+            return res.status(404).json({
+                success: false,
+                message: 'Video not found'
+            });
+        }
+
+        const videos = JSON.parse(
+            fs.readFileSync(dataFile, 'utf8')
+        );
+
+        const video = videos.find(v => v.id === req.params.id);
+
+        if (!video) {
+            return res.status(404).json({
+                success: false,
+                message: 'Video not found'
+            });
+        }
+
+        video.likes = (video.likes || 0) + 1;
+
+        fs.writeFileSync(
+            dataFile,
+            JSON.stringify(videos, null, 2)
+        );
+
+        res.json({
+            success: true,
+            likes: video.likes
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Like update failed'
+        });
+    }
+});
+
+router.post('/:id/comment', (req, res) => {
+    try {
+        const dataFile = path.join(__dirname, '../videos.json');
+
+        if (!fs.existsSync(dataFile)) {
+            return res.status(404).json({
+                success: false,
+                message: 'Video not found'
+            });
+        }
+
+        const videos = JSON.parse(
+            fs.readFileSync(dataFile, 'utf8')
+        );
+
+        const video = videos.find(v => v.id === req.params.id);
+
+        if (!video) {
+            return res.status(404).json({
+                success: false,
+                message: 'Video not found'
+            });
+        }
+
+        const comment = String(req.body.comment || '').trim();
+
+        if (!comment) {
+            return res.status(400).json({
+                success: false,
+                message: 'Comment is required'
+            });
+        }
+
+        if (!video.comments) {
+            video.comments = [];
+        }
+
+        const newComment = {
+            id: Date.now().toString(),
+            text: comment,
+            createdAt: new Date().toISOString()
+        };
+
+        video.comments.push(newComment);
+
+        fs.writeFileSync(
+            dataFile,
+            JSON.stringify(videos, null, 2)
+        );
+
+        res.json({
+            success: true,
+            comment: newComment,
+            totalComments: video.comments.length
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Comment failed'
+        });
+    }
+});
+
+router.get('/', (req, res) => {
+
+    const dataFile = path.join(__dirname, '../videos.json');
+
+    if (!fs.existsSync(dataFile)) {
+        return res.json([]);
+    }
+
+    const videos = JSON.parse(
+        fs.readFileSync(dataFile, 'utf8')
+    );
+
+    res.json(videos);
+});
+
+module.exports = router;

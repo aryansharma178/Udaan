@@ -1,0 +1,113 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f7f7f7;
+    color: #171717;
+}
+
+header {
+    height: 62px;
+    background: white;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    gap: 18px;
+}
+
+header button {
+    border: 0;
+    background: none;
+    font-size: 28px;
+}
+
+header h2 {
+    margin: 0;
+}
+
+main {
+    width: 100%;
+    max-width: 650px;
+    margin: auto;
+    padding: 25px 18px 50px;
+}
+
+.upload-box {
+    background: white;
+    border: 2px dashed #f4511e;
+    border-radius: 22px;
+    text-align: center;
+    padding: 45px 20px;
+}
+
+.upload-icon {
+    font-size: 60px;
+}
+
+.upload-box h1 {
+    margin: 15px 0 8px;
+}
+
+.upload-box p {
+    color: #666;
+}
+
+.file-btn {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 14px 25px;
+    border-radius: 25px;
+    background: #f4511e;
+    color: white;
+    font-weight: bold;
+}
+
+.form {
+    margin-top: 25px;
+    background: white;
+    padding: 25px;
+    border-radius: 22px;
+}
+
+.form label {
+    display: block;
+    font-weight: bold;
+    margin: 15px 0 8px;
+}
+
+.form input,
+.form textarea,
+.form select {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 16px;
+}
+
+.form textarea {
+    height: 110px;
+    resize: vertical;
+}
+
+#uploadBtn {
+    width: 100%;
+    margin-top: 25px;
+    padding: 16px;
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #ff8a00, #f4511e);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#message {
+    text-align: center;
+    color: #f4511e;
+    margin-top: 15px;
+}
