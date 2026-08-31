@@ -16,188 +16,203 @@
 
 <main class="watch-page">
 
-    <section class="player-section">
+<section class="player-section">
 
-        <div id="player" class="player">
+<div id="player" class="player">
 
-            <video id="video"
-                   playsinline
-                   preload="metadata"></video>
+    <video id="video"
+           playsinline
+           webkit-playsinline
+           preload="metadata"></video>
 
-            <div id="loading" class="loading">Loading...</div>
+    <div id="loading" class="loading">Loading...</div>
 
-            <div class="center-play" id="centerPlay">▶</div>
+    <!-- CENTER CONTROLS -->
+    <div class="center-controls">
 
-            <div class="controls">
+        <button id="centerBack10"
+                class="center-seek"
+                title="10 seconds back">
+            <span class="seek-icon">↶</span>
+            <span class="seek-number">10</span>
+        </button>
 
-                <div class="progress-row">
-                    <span id="currentTime">0:00</span>
+        <button id="centerPlay"
+                class="center-play"
+                title="Play/Pause">▶</button>
 
-                    <input id="progress"
-                           type="range"
-                           min="0"
-                           max="100"
-                           value="0">
+        <button id="centerForward10"
+                class="center-seek"
+                title="10 seconds forward">
+            <span class="seek-icon">↷</span>
+            <span class="seek-number">10</span>
+        </button>
 
-                    <span id="duration">0:00</span>
-                </div>
+    </div>
 
-                <div class="control-row">
+    <!-- VIDEO CONTROLS -->
+    <div class="controls">
 
-                    <button id="playBtn" title="Play/Pause">▶</button>
+        <!-- TOP -->
+        <div class="top-controls">
 
-                    <button id="muteBtn" title="Mute">🔊</button>
+            <button id="ccBtn"
+                    title="Captions">CC</button>
 
-                    <input id="volume"
-                           class="volume"
-                           type="range"
-                           min="0"
-                           max="1"
-                           step="0.05"
-                           value="1">
-
-                    <div class="control-spacer"></div>
-
-                    <!-- CC INSIDE VIDEO -->
-                    <button id="ccBtn"
-                            class="video-control"
-                            title="Captions">CC</button>
-
-                    <!-- SETTINGS INSIDE VIDEO -->
-                    <button id="settingsBtn"
-                            class="video-control"
-                            title="Settings">⚙</button>
-
-                    <button id="fullscreenBtn"
-                            title="Fullscreen">⛶</button>
-                </div>
-
-            </div>
-
-            <!-- SETTINGS MENU -->
-            <div id="settingsMenu" class="settings-menu">
-
-                <div class="settings-title">
-                    <span>⚙️</span>
-                    <strong>Settings</strong>
-                    <button id="closeSettings">✕</button>
-                </div>
-
-                <button class="setting-item" id="qualitySetting">
-                    <span>🎚️ Quality</span>
-                    <span id="qualityValue">Auto ›</span>
-                </button>
-
-                <button class="setting-item" id="speedSetting">
-                    <span>▶️ Playback speed</span>
-                    <span id="speedValue">1x ›</span>
-                </button>
-
-                <button class="setting-item" id="captionSetting">
-                    <span>CC Captions</span>
-                    <span id="captionValue">Off ›</span>
-                </button>
-
-            </div>
-
-            <!-- QUALITY MENU -->
-            <div id="qualityMenu" class="sub-menu">
-
-                <div class="sub-header">
-                    <button id="qualityBack">←</button>
-                    <strong>Quality</strong>
-                </div>
-
-                <button data-quality="auto">Auto</button>
-                <button data-quality="360p">360p</button>
-                <button data-quality="480p">480p</button>
-                <button data-quality="720p">720p</button>
-                <button data-quality="1080p">1080p</button>
-
-            </div>
-
-            <!-- SPEED MENU -->
-            <div id="speedMenu" class="sub-menu">
-
-                <div class="sub-header">
-                    <button id="speedBack">←</button>
-                    <strong>Playback speed</strong>
-                </div>
-
-                <button data-speed="0.25">0.25x</button>
-                <button data-speed="0.5">0.5x</button>
-                <button data-speed="0.75">0.75x</button>
-                <button data-speed="1">Normal</button>
-                <button data-speed="1.25">1.25x</button>
-                <button data-speed="1.5">1.5x</button>
-                <button data-speed="1.75">1.75x</button>
-                <button data-speed="2">2x</button>
-
-            </div>
-
-            <!-- CAPTION MENU -->
-            <div id="captionMenu" class="sub-menu">
-
-                <div class="sub-header">
-                    <button id="captionBack">←</button>
-                    <strong>Captions</strong>
-                </div>
-
-                <button data-caption="off">Off</button>
-                <button data-caption="on">Hindi</button>
-
-            </div>
+            <button id="settingsBtn"
+                    title="Settings">⚙</button>
 
         </div>
 
-        <section class="video-info">
+        <!-- BOTTOM -->
+        <div class="bottom-controls">
 
-            <h1 id="videoTitle">Loading video...</h1>
+            <span id="currentTime">0:00</span>
 
-            <div class="creator-row">
+            <input id="progress"
+                   type="range"
+                   min="0"
+                   max="100"
+                   value="0">
 
-                <div id="creatorAvatar" class="creator-avatar">U</div>
+            <span id="duration">0:00</span>
 
-                <div class="creator-info">
-                    <strong id="creatorName">@creator</strong>
-                    <small id="videoStats">0 views</small>
-                </div>
+            <button id="fullscreenBtn"
+                    title="Zoom / Fullscreen">⛶</button>
 
-                <button id="subscribeBtn">Subscribe</button>
+        </div>
 
-            </div>
+    </div>
 
-            <div class="video-actions">
+    <!-- SETTINGS -->
+    <div id="settingsMenu" class="settings-menu">
 
-                <button id="likeBtn">♡ <span id="likeCount">0</span></button>
+        <div class="settings-title">
+            <span>⚙️</span>
+            <strong>Settings</strong>
+            <button id="closeSettings">✕</button>
+        </div>
 
-                <button id="shareBtn">↗ Share</button>
+        <button class="setting-item" id="qualitySetting">
+            <span>🎚️ Quality</span>
+            <span id="qualityValue">Auto ›</span>
+        </button>
 
-                <button id="moreBtn">•••</button>
+        <button class="setting-item" id="speedSetting">
+            <span>▶️ Playback speed</span>
+            <span id="speedValue">1x ›</span>
+        </button>
 
-            </div>
+        <button class="setting-item" id="captionSetting">
+            <span>CC Captions</span>
+            <span id="captionValue">Off ›</span>
+        </button>
 
-            <div class="description" id="description"></div>
+    </div>
 
-        </section>
+    <!-- QUALITY -->
+    <div id="qualityMenu" class="sub-menu">
 
-        <section class="comments-section">
+        <div class="sub-header">
+            <button id="qualityBack">←</button>
+            <strong>Quality</strong>
+        </div>
 
-            <h2>Comments</h2>
+        <button data-quality="auto">Auto</button>
+        <button data-quality="360p">360p</button>
+        <button data-quality="480p">480p</button>
+        <button data-quality="720p">720p</button>
+        <button data-quality="1080p">1080p</button>
 
-            <div id="comments"></div>
+    </div>
 
-        </section>
+    <!-- SPEED -->
+    <div id="speedMenu" class="sub-menu">
 
-    </section>
+        <div class="sub-header">
+            <button id="speedBack">←</button>
+            <strong>Playback speed</strong>
+        </div>
 
-    <aside class="related-section">
+        <button data-speed="0.25">0.25x</button>
+        <button data-speed="0.5">0.5x</button>
+        <button data-speed="0.75">0.75x</button>
+        <button data-speed="1">Normal</button>
+        <button data-speed="1.25">1.25x</button>
+        <button data-speed="1.5">1.5x</button>
+        <button data-speed="1.75">1.75x</button>
+        <button data-speed="2">2x</button>
 
-        <h2>Next videos</h2>
+    </div>
 
-        <div id="relatedVideos"></div>
+    <!-- CAPTIONS -->
+    <div id="captionMenu" class="sub-menu">
 
-    </aside>
+        <div class="sub-header">
+            <button id="captionBack">←</button>
+            <strong>Captions</strong>
+        </div>
+
+        <button data-caption="off">Off</button>
+        <button data-caption="on">Hindi</button>
+
+    </div>
+
+</div>
+
+<!-- VIDEO INFO -->
+<section class="video-info">
+
+    <h1 id="videoTitle">Loading video...</h1>
+
+    <div class="creator-row">
+
+        <div id="creatorAvatar" class="creator-avatar">U</div>
+
+        <div class="creator-info">
+            <strong id="creatorName">@creator</strong>
+            <small id="videoStats">0 views</small>
+        </div>
+
+        <button id="subscribeBtn">Subscribe</button>
+
+    </div>
+
+    <div class="video-actions">
+
+        <button id="likeBtn">
+            ♡ <span id="likeCount">0</span>
+        </button>
+
+        <button id="shareBtn">↗ Share</button>
+
+        <button id="moreBtn">•••</button>
+
+    </div>
+
+    <div class="description" id="description"></div>
+
+</section>
+
+<!-- COMMENTS -->
+<section class="comments-section">
+
+    <h2>Comments</h2>
+
+    <div id="comments"></div>
+
+</section>
+
+</section>
+
+<!-- RELATED -->
+<aside class="related-section">
+
+    <h2>Next videos</h2>
+
+    <div id="relatedVideos"></div>
+
+</aside>
 
 </main>
 

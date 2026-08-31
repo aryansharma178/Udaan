@@ -1,39 +1,74 @@
 const video = document.getElementById('video');
 const player = document.getElementById('player');
 
-const playBtn = document.getElementById('playBtn');
 const centerPlay = document.getElementById('centerPlay');
-const muteBtn = document.getElementById('muteBtn');
-const volume = document.getElementById('volume');
+const centerBack10 = document.getElementById('centerBack10');
+const centerForward10 = document.getElementById('centerForward10');
+
 const progress = document.getElementById('progress');
 
-const currentTimeEl = document.getElementById('currentTime');
-const durationEl = document.getElementById('duration');
+const currentTimeEl =
+    document.getElementById('currentTime');
 
-const settingsBtn = document.getElementById('settingsBtn');
-const settingsMenu = document.getElementById('settingsMenu');
-const closeSettings = document.getElementById('closeSettings');
+const durationEl =
+    document.getElementById('duration');
 
-const qualityMenu = document.getElementById('qualityMenu');
-const speedMenu = document.getElementById('speedMenu');
-const captionMenu = document.getElementById('captionMenu');
+const fullscreenBtn =
+    document.getElementById('fullscreenBtn');
 
-const qualitySetting = document.getElementById('qualitySetting');
-const speedSetting = document.getElementById('speedSetting');
-const captionSetting = document.getElementById('captionSetting');
+const settingsBtn =
+    document.getElementById('settingsBtn');
 
-const qualityValue = document.getElementById('qualityValue');
-const speedValue = document.getElementById('speedValue');
-const captionValue = document.getElementById('captionValue');
+const settingsMenu =
+    document.getElementById('settingsMenu');
 
-const loading = document.getElementById('loading');
+const closeSettings =
+    document.getElementById('closeSettings');
+
+const qualityMenu =
+    document.getElementById('qualityMenu');
+
+const speedMenu =
+    document.getElementById('speedMenu');
+
+const captionMenu =
+    document.getElementById('captionMenu');
+
+const qualitySetting =
+    document.getElementById('qualitySetting');
+
+const speedSetting =
+    document.getElementById('speedSetting');
+
+const captionSetting =
+    document.getElementById('captionSetting');
+
+const qualityValue =
+    document.getElementById('qualityValue');
+
+const speedValue =
+    document.getElementById('speedValue');
+
+const captionValue =
+    document.getElementById('captionValue');
+
+const loading =
+    document.getElementById('loading');
 
 let currentVideo = null;
 let currentQuality = 'auto';
 let currentCaption = false;
 
+
+/* =====================================================
+   TIME
+   ===================================================== */
+
 function formatTime(seconds) {
-    if (!Number.isFinite(seconds)) return '0:00';
+
+    if (!Number.isFinite(seconds)) {
+        return '0:00';
+    }
 
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
@@ -41,8 +76,17 @@ function formatTime(seconds) {
     return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+
+/* =====================================================
+   VIDEO ID
+   ===================================================== */
+
 function getVideoId() {
-    const params = new URLSearchParams(window.location.search);
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
 
     return (
         params.get('video') ||
@@ -54,27 +98,50 @@ function getVideoId() {
     ).trim();
 }
 
-function getSource(videoData, quality = 'auto') {
-    if (!videoData) return '';
 
-    const qualities = videoData.qualities || {};
+/* =====================================================
+   VIDEO SOURCE
+   ===================================================== */
 
-    // Selected quality available ho to wahi use karo
-    if (quality !== 'auto' && qualities[quality]) {
-        return String(qualities[quality]);
+function getSource(
+    videoData,
+    quality = 'auto'
+) {
+
+    if (!videoData) {
+        return '';
     }
 
-    // Original quality
+    const qualities =
+        videoData.qualities || {};
+
+    if (
+        quality !== 'auto' &&
+        qualities[quality]
+    ) {
+
+        return String(
+            qualities[quality]
+        );
+
+    }
+
     if (qualities.original) {
-        return String(qualities.original);
+
+        return String(
+            qualities.original
+        );
+
     }
 
-    // Purane videos ke liye filename se direct source
     if (videoData.filename) {
-        return `/uploads/${encodeURIComponent(String(videoData.filename))}`;
+
+        return `/uploads/${encodeURIComponent(
+            String(videoData.filename)
+        )}`;
+
     }
 
-    // Extra compatibility
     return String(
         videoData.url ||
         videoData.videoUrl ||
@@ -84,11 +151,24 @@ function getSource(videoData, quality = 'auto') {
     );
 }
 
-function videoMatches(item, requestedId) {
 
-    const wanted = String(requestedId || '').trim();
+/* =====================================================
+   MATCH VIDEO
+   ===================================================== */
 
-    if (!wanted) return false;
+function videoMatches(
+    item,
+    requestedId
+) {
+
+    const wanted =
+        String(
+            requestedId || ''
+        ).trim();
+
+    if (!wanted) {
+        return false;
+    }
 
     const values = [
         item.id,
@@ -99,229 +179,469 @@ function videoMatches(item, requestedId) {
         item.url
     ];
 
-    return values.some(value =>
-        value !== undefined &&
-        value !== null &&
-        String(value).trim() === wanted
+    return values.some(
+        value =>
+            value !== undefined &&
+            value !== null &&
+            String(value).trim() === wanted
     );
 }
 
+
+/* =====================================================
+   LOAD VIDEO
+   ===================================================== */
+
 async function loadVideo() {
+
     const id = getVideoId();
 
     try {
+
         loading?.classList.add('show');
 
-        const response = await fetch('/api/videos', {
-            cache: 'no-store'
-        });
+        const response =
+            await fetch(
+                '/api/videos',
+                {
+                    cache: 'no-store'
+                }
+            );
 
         if (!response.ok) {
-            throw new Error('Videos API failed: ' + response.status);
+
+            throw new Error(
+                'Videos API failed: ' +
+                response.status
+            );
+
         }
 
-        const apiData = await response.json();
+        const apiData =
+            await response.json();
 
-        const videos = Array.isArray(apiData)
-            ? apiData
-            : Array.isArray(apiData.videos)
-                ? apiData.videos
-                : Array.isArray(apiData.data)
-                    ? apiData.data
-                    : [];
+        const videos =
+            Array.isArray(apiData)
+                ? apiData
+                : Array.isArray(apiData.videos)
+                    ? apiData.videos
+                    : Array.isArray(apiData.data)
+                        ? apiData.data
+                        : [];
 
-        /*
-         * Agar URL mein video ID nahi hai,
-         * to latest video automatically open karo.
-         */
-        const targetId = id || (
-            videos.length
-                ? String(videos[videos.length - 1].id || '')
-                : ''
-        );
+        const targetId =
+            id ||
+            (
+                videos.length
+                    ? String(
+                        videos[
+                            videos.length - 1
+                        ].id || ''
+                    )
+                    : ''
+            );
 
-        currentVideo = videos.find(item =>
-            videoMatches(item, targetId)
-        );
+        currentVideo =
+            videos.find(
+                item =>
+                    videoMatches(
+                        item,
+                        targetId
+                    )
+            );
 
         if (!currentVideo) {
-            throw new Error('Video not found: ' + targetId);
+
+            throw new Error(
+                'Video not found: ' +
+                targetId
+            );
+
         }
 
-        const source = getSource(currentVideo, 'auto');
+        const source =
+            getSource(
+                currentVideo,
+                'auto'
+            );
 
         if (!source) {
-            throw new Error('Video source not found');
+
+            throw new Error(
+                'Video source not found'
+            );
+
         }
 
-        console.log('UDAAN WATCH VIDEO');
-        console.log('ID:', currentVideo.id);
-        console.log('FILENAME:', currentVideo.filename);
-        console.log('SOURCE:', source);
+        console.log(
+            'UDAAN WATCH VIDEO'
+        );
 
-        document.getElementById('videoTitle').textContent =
-            currentVideo.title || 'Untitled Video';
+        console.log(
+            'ID:',
+            currentVideo.id
+        );
 
-        document.getElementById('creatorName').textContent =
-            '@' + (currentVideo.username || 'creator');
+        console.log(
+            'FILENAME:',
+            currentVideo.filename
+        );
 
-        document.getElementById('videoStats').textContent =
-            `${currentVideo.views || 0} views • ${currentVideo.likes || 0} likes`;
+        console.log(
+            'SOURCE:',
+            source
+        );
 
-        document.getElementById('likeCount').textContent =
+
+        document.getElementById(
+            'videoTitle'
+        ).textContent =
+            currentVideo.title ||
+            'Untitled Video';
+
+
+        document.getElementById(
+            'creatorName'
+        ).textContent =
+            '@' +
+            (
+                currentVideo.username ||
+                'creator'
+            );
+
+
+        document.getElementById(
+            'videoStats'
+        ).textContent =
+            `${currentVideo.views || 0} views • ${
+                currentVideo.likes || 0
+            } likes`;
+
+
+        document.getElementById(
+            'likeCount'
+        ).textContent =
             currentVideo.likes || 0;
 
-        document.getElementById('description').textContent =
+
+        document.getElementById(
+            'description'
+        ).textContent =
             currentVideo.description || '';
 
+
         const initial =
-            (currentVideo.username ||
-             currentVideo.title ||
-             'U').charAt(0).toUpperCase();
+            (
+                currentVideo.username ||
+                currentVideo.title ||
+                'U'
+            )
+            .charAt(0)
+            .toUpperCase();
 
-        document.getElementById('creatorAvatar').textContent = initial;
 
-        // Important mobile video settings
-        video.setAttribute('playsinline', '');
-        video.setAttribute('webkit-playsinline', '');
-        video.preload = 'metadata';
-        video.controls = false;
+        document.getElementById(
+            'creatorAvatar'
+        ).textContent =
+            initial;
 
-        video.onerror = () => {
-            console.error(
-                'UDAAN VIDEO ERROR:',
-                video.error,
-                video.currentSrc || video.src
-            );
 
-            document.getElementById('videoTitle').textContent =
-                'Video source could not be played';
-        };
+        video.setAttribute(
+            'playsinline',
+            ''
+        );
 
-        video.onloadedmetadata = () => {
-            console.log(
-                'UDAAN VIDEO LOADED:',
-                video.duration,
-                'seconds'
-            );
+        video.setAttribute(
+            'webkit-playsinline',
+            ''
+        );
 
-            durationEl.textContent =
-                formatTime(video.duration);
-        };
+        video.preload =
+            'metadata';
 
-        // Purana source completely remove karke naya source load
+        video.controls =
+            false;
+
+
+        video.onerror =
+            () => {
+
+                console.error(
+                    'UDAAN VIDEO ERROR:',
+                    video.error,
+                    video.currentSrc ||
+                    video.src
+                );
+
+                document.getElementById(
+                    'videoTitle'
+                ).textContent =
+                    'Video source could not be played';
+
+            };
+
+
         video.pause();
-        video.removeAttribute('src');
+
+        video.removeAttribute(
+            'src'
+        );
+
         video.load();
 
-        video.src = source;
+        video.src =
+            source;
+
         video.load();
 
-        // Related + comments
+
         loadComments();
-        loadRelated(videos, currentVideo.id);
+
+        loadRelated(
+            videos,
+            currentVideo.id
+        );
 
     } catch (error) {
-        console.error('UDAAN WATCH LOAD ERROR:', error);
 
-        document.getElementById('videoTitle').textContent =
+        console.error(
+            'UDAAN WATCH LOAD ERROR:',
+            error
+        );
+
+        document.getElementById(
+            'videoTitle'
+        ).textContent =
             'Unable to load video';
 
     } finally {
-        loading?.classList.remove('show');
+
+        loading?.classList.remove(
+            'show'
+        );
+
     }
 }
-/* PLAY / PAUSE */
 
-function togglePlay() {
+
+/* =====================================================
+   PLAY / PAUSE
+   ===================================================== */
+
+function togglePlay(
+    event
+) {
+
+    if (event) {
+        event.stopPropagation();
+    }
 
     if (video.paused) {
-        video.play().catch(() => {});
+
+        video.play()
+            .catch(
+                error =>
+                    console.error(
+                        'Play error:',
+                        error
+                    )
+            );
+
     } else {
+
         video.pause();
+
     }
 }
 
-playBtn.addEventListener('click', togglePlay);
-centerPlay.addEventListener('click', togglePlay);
-video.addEventListener('click', togglePlay);
 
-video.addEventListener('play', () => {
+centerPlay.addEventListener(
+    'click',
+    togglePlay
+);
 
-    playBtn.textContent = '❚❚';
-    centerPlay.classList.add('hidden');
 
-});
+video.addEventListener(
+    'click',
+    togglePlay
+);
 
-video.addEventListener('pause', () => {
 
-    playBtn.textContent = '▶';
-    centerPlay.classList.remove('hidden');
+video.addEventListener(
+    'play',
+    () => {
 
-});
+        centerPlay.textContent =
+            '❚❚';
 
-/* TIME */
+    }
+);
 
-video.addEventListener('loadedmetadata', () => {
 
-    durationEl.textContent =
-        formatTime(video.duration);
+video.addEventListener(
+    'pause',
+    () => {
 
-});
+        centerPlay.textContent =
+            '▶';
 
-video.addEventListener('timeupdate', () => {
+    }
+);
 
-    if (!video.duration) return;
 
-    progress.value =
-        (video.currentTime / video.duration) * 100;
+/* =====================================================
+   CENTER BACK 10
+   ===================================================== */
 
-    currentTimeEl.textContent =
-        formatTime(video.currentTime);
+centerBack10.addEventListener(
+    'click',
+    event => {
 
-});
+        event.stopPropagation();
 
-progress.addEventListener('input', () => {
+        if (
+            !Number.isFinite(
+                video.duration
+            )
+        ) {
+            return;
+        }
 
-    if (!video.duration) return;
+        video.currentTime =
+            Math.max(
+                0,
+                video.currentTime - 10
+            );
 
-    video.currentTime =
-        (Number(progress.value) / 100) * video.duration;
+    }
+);
 
-});
 
-/* VOLUME */
+/* =====================================================
+   CENTER FORWARD 10
+   ===================================================== */
 
-muteBtn.addEventListener('click', () => {
+centerForward10.addEventListener(
+    'click',
+    event => {
 
-    video.muted = !video.muted;
+        event.stopPropagation();
 
-    muteBtn.textContent =
-        video.muted ? '🔇' : '🔊';
+        if (
+            !Number.isFinite(
+                video.duration
+            )
+        ) {
+            return;
+        }
 
-});
+        video.currentTime =
+            Math.min(
+                video.duration,
+                video.currentTime + 10
+            );
 
-volume.addEventListener('input', () => {
+    }
+);
 
-    video.volume = Number(volume.value);
 
-    video.muted = video.volume === 0;
+/* =====================================================
+   METADATA
+   ===================================================== */
 
-    muteBtn.textContent =
-        video.muted ? '🔇' : '🔊';
+video.addEventListener(
+    'loadedmetadata',
+    () => {
 
-});
+        durationEl.textContent =
+            formatTime(
+                video.duration
+            );
 
-/* FULLSCREEN */
+    }
+);
 
-document.getElementById('fullscreenBtn')
-    .addEventListener('click', async () => {
+
+/* =====================================================
+   TIME UPDATE
+   ===================================================== */
+
+video.addEventListener(
+    'timeupdate',
+    () => {
+
+        if (!video.duration) {
+            return;
+        }
+
+        progress.value =
+            (
+                video.currentTime /
+                video.duration
+            ) * 100;
+
+        currentTimeEl.textContent =
+            formatTime(
+                video.currentTime
+            );
+
+    }
+);
+
+
+/* =====================================================
+   SEEK BAR
+   ===================================================== */
+
+progress.addEventListener(
+    'input',
+    () => {
+
+        if (!video.duration) {
+            return;
+        }
+
+        video.currentTime =
+            (
+                Number(
+                    progress.value
+                ) / 100
+            ) *
+            video.duration;
+
+    }
+);
+
+
+/* =====================================================
+   FULLSCREEN / ZOOM
+   ===================================================== */
+
+fullscreenBtn.addEventListener(
+    'click',
+    async event => {
+
+        event.stopPropagation();
 
         try {
 
-            if (!document.fullscreenElement) {
+            if (
+                !document.fullscreenElement
+            ) {
 
-                await player.requestFullscreen();
+                if (
+                    player.requestFullscreen
+                ) {
+
+                    await player.requestFullscreen();
+
+                } else if (
+                    video.webkitEnterFullscreen
+                ) {
+
+                    video.webkitEnterFullscreen();
+
+                }
 
             } else {
 
@@ -331,295 +651,528 @@ document.getElementById('fullscreenBtn')
 
         } catch (error) {
 
-            console.error('Fullscreen error:', error);
+            console.error(
+                'Fullscreen error:',
+                error
+            );
 
         }
 
-    });
+    }
+);
 
-/* SETTINGS */
+
+/* =====================================================
+   SETTINGS
+   ===================================================== */
 
 function closeAllMenus() {
 
-    settingsMenu.classList.remove('show');
-    qualityMenu.classList.remove('show');
-    speedMenu.classList.remove('show');
-    captionMenu.classList.remove('show');
+    settingsMenu.classList.remove(
+        'show'
+    );
+
+    qualityMenu.classList.remove(
+        'show'
+    );
+
+    speedMenu.classList.remove(
+        'show'
+    );
+
+    captionMenu.classList.remove(
+        'show'
+    );
 
 }
 
-settingsBtn.addEventListener('click', event => {
 
-    event.stopPropagation();
+settingsBtn.addEventListener(
+    'click',
+    event => {
 
-    qualityMenu.classList.remove('show');
-    speedMenu.classList.remove('show');
-    captionMenu.classList.remove('show');
+        event.stopPropagation();
 
-    settingsMenu.classList.toggle('show');
+        qualityMenu.classList.remove(
+            'show'
+        );
 
-});
+        speedMenu.classList.remove(
+            'show'
+        );
 
-closeSettings.addEventListener('click', closeAllMenus);
+        captionMenu.classList.remove(
+            'show'
+        );
 
-qualitySetting.addEventListener('click', () => {
+        settingsMenu.classList.toggle(
+            'show'
+        );
 
-    settingsMenu.classList.remove('show');
-    qualityMenu.classList.add('show');
+    }
+);
 
-});
 
-speedSetting.addEventListener('click', () => {
+closeSettings.addEventListener(
+    'click',
+    closeAllMenus
+);
 
-    settingsMenu.classList.remove('show');
-    speedMenu.classList.add('show');
 
-});
+/* =====================================================
+   QUALITY
+   ===================================================== */
 
-captionSetting.addEventListener('click', () => {
+qualitySetting.addEventListener(
+    'click',
+    () => {
 
-    settingsMenu.classList.remove('show');
-    captionMenu.classList.add('show');
+        settingsMenu.classList.remove(
+            'show'
+        );
 
-});
+        qualityMenu.classList.add(
+            'show'
+        );
 
-/* QUALITY */
+    }
+);
 
-document.querySelectorAll('[data-quality]')
-    .forEach(button => {
 
-        button.addEventListener('click', () => {
+document.querySelectorAll(
+    '[data-quality]'
+).forEach(
+    button => {
 
-            const quality = button.dataset.quality;
+        button.addEventListener(
+            'click',
+            () => {
 
-            currentQuality = quality;
+                const quality =
+                    button.dataset.quality;
 
-            qualityValue.textContent =
-                `${quality === 'auto' ? 'Auto' : quality} ›`;
+                currentQuality =
+                    quality;
 
-            const wasPlaying = !video.paused;
-            const savedTime = video.currentTime;
+                qualityValue.textContent =
+                    `${
+                        quality === 'auto'
+                            ? 'Auto'
+                            : quality
+                    } ›`;
 
-            const source = getSource(
-                currentVideo,
-                quality
-            );
+                const wasPlaying =
+                    !video.paused;
 
-            if (source) {
+                const savedTime =
+                    video.currentTime;
 
-                video.src = source;
-                video.load();
+                const source =
+                    getSource(
+                        currentVideo,
+                        quality
+                    );
 
-                video.addEventListener(
-                    'loadedmetadata',
-                    function restore() {
+                if (!source) {
+                    return;
+                }
+
+                const restore =
+                    () => {
 
                         video.currentTime =
                             Math.min(
                                 savedTime,
-                                video.duration || savedTime
+                                video.duration ||
+                                savedTime
                             );
 
                         if (wasPlaying) {
-                            video.play().catch(() => {});
+
+                            video.play()
+                                .catch(
+                                    () => {}
+                                );
+
                         }
 
-                        video.removeEventListener(
-                            'loadedmetadata',
-                            restore
-                        );
+                    };
+
+                video.addEventListener(
+                    'loadedmetadata',
+                    restore,
+                    {
+                        once: true
+                    }
+                );
+
+                video.src =
+                    source;
+
+                video.load();
+
+                qualityMenu.classList.remove(
+                    'show'
+                );
+
+            }
+        );
+
+    }
+);
+
+
+document.getElementById(
+    'qualityBack'
+).addEventListener(
+    'click',
+    () => {
+
+        qualityMenu.classList.remove(
+            'show'
+        );
+
+        settingsMenu.classList.add(
+            'show'
+        );
+
+    }
+);
+
+
+/* =====================================================
+   SPEED
+   ===================================================== */
+
+speedSetting.addEventListener(
+    'click',
+    () => {
+
+        settingsMenu.classList.remove(
+            'show'
+        );
+
+        speedMenu.classList.add(
+            'show'
+        );
+
+    }
+);
+
+
+document.querySelectorAll(
+    '[data-speed]'
+).forEach(
+    button => {
+
+        button.addEventListener(
+            'click',
+            () => {
+
+                const speed =
+                    Number(
+                        button.dataset.speed
+                    );
+
+                video.playbackRate =
+                    speed;
+
+                speedValue.textContent =
+                    `${
+                        speed === 1
+                            ? '1x'
+                            : speed + 'x'
+                    } ›`;
+
+                speedMenu.classList.remove(
+                    'show'
+                );
+
+            }
+        );
+
+    }
+);
+
+
+document.getElementById(
+    'speedBack'
+).addEventListener(
+    'click',
+    () => {
+
+        speedMenu.classList.remove(
+            'show'
+        );
+
+        settingsMenu.classList.add(
+            'show'
+        );
+
+    }
+);
+
+
+/* =====================================================
+   CAPTIONS
+   ===================================================== */
+
+captionSetting.addEventListener(
+    'click',
+    () => {
+
+        settingsMenu.classList.remove(
+            'show'
+        );
+
+        captionMenu.classList.add(
+            'show'
+        );
+
+    }
+);
+
+
+document.querySelectorAll(
+    '[data-caption]'
+).forEach(
+    button => {
+
+        button.addEventListener(
+            'click',
+            () => {
+
+                currentCaption =
+                    button.dataset.caption ===
+                    'on';
+
+                captionValue.textContent =
+                    currentCaption
+                        ? 'Hindi ›'
+                        : 'Off ›';
+
+                [
+                    ...video.textTracks
+                ].forEach(
+                    track => {
+
+                        track.mode =
+                            currentCaption
+                                ? 'showing'
+                                : 'hidden';
 
                     }
                 );
 
+                captionMenu.classList.remove(
+                    'show'
+                );
+
             }
+        );
 
-            qualityMenu.classList.remove('show');
+    }
+);
 
-        });
 
-    });
+document.getElementById(
+    'captionBack'
+).addEventListener(
+    'click',
+    () => {
 
-document.getElementById('qualityBack')
-    .addEventListener('click', () => {
+        captionMenu.classList.remove(
+            'show'
+        );
 
-        qualityMenu.classList.remove('show');
-        settingsMenu.classList.add('show');
+        settingsMenu.classList.add(
+            'show'
+        );
 
-    });
+    }
+);
 
-/* SPEED */
 
-document.querySelectorAll('[data-speed]')
-    .forEach(button => {
+/* =====================================================
+   CC BUTTON
+   ===================================================== */
 
-        button.addEventListener('click', () => {
+document.getElementById(
+    'ccBtn'
+).addEventListener(
+    'click',
+    event => {
 
-            const speed =
-                Number(button.dataset.speed);
+        event.stopPropagation();
 
-            video.playbackRate = speed;
-
-            speedValue.textContent =
-                `${speed === 1 ? '1x' : speed + 'x'} ›`;
-
-            speedMenu.classList.remove('show');
-
-        });
-
-    });
-
-document.getElementById('speedBack')
-    .addEventListener('click', () => {
-
-        speedMenu.classList.remove('show');
-        settingsMenu.classList.add('show');
-
-    });
-
-/* CAPTIONS */
-
-document.querySelectorAll('[data-caption]')
-    .forEach(button => {
-
-        button.addEventListener('click', () => {
-
-            currentCaption =
-                button.dataset.caption === 'on';
-
-            captionValue.textContent =
-                currentCaption ? 'Hindi ›' : 'Off ›';
-
-            /*
-             * Native text tracks will be enabled here
-             * automatically if the uploaded video has
-             * a caption track.
-             */
-
-            [...video.textTracks].forEach(track => {
-
-                track.mode =
-                    currentCaption ? 'showing' : 'hidden';
-
-            });
-
-            captionMenu.classList.remove('show');
-
-        });
-
-    });
-
-document.getElementById('captionBack')
-    .addEventListener('click', () => {
-
-        captionMenu.classList.remove('show');
-        settingsMenu.classList.add('show');
-
-    });
-
-/* CC BUTTON */
-
-document.getElementById('ccBtn')
-    .addEventListener('click', () => {
-
-        currentCaption = !currentCaption;
+        currentCaption =
+            !currentCaption;
 
         captionValue.textContent =
-            currentCaption ? 'Hindi ›' : 'Off ›';
+            currentCaption
+                ? 'Hindi ›'
+                : 'Off ›';
 
-        [...video.textTracks].forEach(track => {
+        [
+            ...video.textTracks
+        ].forEach(
+            track => {
 
-            track.mode =
-                currentCaption ? 'showing' : 'hidden';
+                track.mode =
+                    currentCaption
+                        ? 'showing'
+                        : 'hidden';
 
-        });
+            }
+        );
 
-        document.getElementById('ccBtn')
-            .style.opacity =
-            currentCaption ? '1' : '.7';
+        document.getElementById(
+            'ccBtn'
+        ).style.opacity =
+            currentCaption
+                ? '1'
+                : '.7';
 
-    });
+    }
+);
 
-/* SHARE */
 
-document.getElementById('shareBtn')
-    .addEventListener('click', async () => {
+/* =====================================================
+   SHARE
+   ===================================================== */
 
-        const url = location.href;
+document.getElementById(
+    'shareBtn'
+).addEventListener(
+    'click',
+    async () => {
+
+        const url =
+            location.href;
 
         try {
 
-            if (navigator.share) {
+            if (
+                navigator.share
+            ) {
 
                 await navigator.share({
-                    title: currentVideo?.title || 'UDAAN',
-                    text: 'Watch this video on UDAAN 🚀',
+
+                    title:
+                        currentVideo?.title ||
+                        'UDAAN',
+
+                    text:
+                        'Watch this video on UDAAN 🚀',
+
                     url
+
                 });
 
             } else {
 
-                await navigator.clipboard.writeText(url);
+                await navigator.clipboard
+                    .writeText(url);
 
-                alert('Video link copied!');
+                alert(
+                    'Video link copied!'
+                );
 
             }
 
         } catch (error) {
 
-            if (error.name !== 'AbortError') {
-                console.error(error);
+            if (
+                error.name !==
+                'AbortError'
+            ) {
+
+                console.error(
+                    error
+                );
+
             }
 
         }
 
-    });
+    }
+);
 
-/* LIKE */
 
-document.getElementById('likeBtn')
-    .addEventListener('click', async () => {
+/* =====================================================
+   LIKE
+   ===================================================== */
 
-        if (!currentVideo) return;
+document.getElementById(
+    'likeBtn'
+).addEventListener(
+    'click',
+    async () => {
+
+        if (!currentVideo) {
+            return;
+        }
 
         try {
 
-            const response = await fetch(
-                `/api/videos/${encodeURIComponent(currentVideo.id)}/like`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
+            const response =
+                await fetch(
+                    `/api/videos/${
+                        encodeURIComponent(
+                            currentVideo.id
+                        )
+                    }/like`,
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/json'
+                        }
                     }
-                }
-            );
+                );
 
-            if (!response.ok) return;
+            if (!response.ok) {
+                return;
+            }
 
-            const result = await response.json();
+            const result =
+                await response.json();
 
-            document.getElementById('likeCount')
-                .textContent =
+            document.getElementById(
+                'likeCount'
+            ).textContent =
                 result.likes ??
                 currentVideo.likes ??
                 0;
 
         } catch (error) {
 
-            console.error('Like error:', error);
+            console.error(
+                'Like error:',
+                error
+            );
 
         }
 
-    });
+    }
+);
 
-/* COMMENTS */
+
+/* =====================================================
+   COMMENTS
+   ===================================================== */
 
 async function loadComments() {
 
-    if (!currentVideo) return;
+    if (!currentVideo) {
+        return;
+    }
 
     const box =
-        document.getElementById('comments');
+        document.getElementById(
+            'comments'
+        );
 
     const comments =
         currentVideo.comments || [];
@@ -630,113 +1183,202 @@ async function loadComments() {
             '<p>No comments yet.</p>';
 
         return;
+
     }
 
-    box.innerHTML = comments.map(comment => `
+    box.innerHTML =
+        comments.map(
+            comment => `
 
-        <div class="comment">
-            <strong>👤 Creator</strong>
-            <div>${escapeHtml(comment.text || '')}</div>
-        </div>
+            <div class="comment">
 
-    `).join('');
+                <strong>👤 Creator</strong>
+
+                <div>
+                    ${escapeHtml(
+                        comment.text || ''
+                    )}
+                </div>
+
+            </div>
+
+        `
+        ).join('');
 
 }
+
 
 function escapeHtml(value) {
 
     return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+        .replaceAll(
+            '&',
+            '&amp;'
+        )
+        .replaceAll(
+            '<',
+            '&lt;'
+        )
+        .replaceAll(
+            '>',
+            '&gt;'
+        )
+        .replaceAll(
+            '"',
+            '&quot;'
+        )
+        .replaceAll(
+            "'",
+            '&#039;'
+        );
 
 }
 
-/* RELATED */
 
-function loadRelated(videos, currentId) {
+/* =====================================================
+   RELATED VIDEOS
+   ===================================================== */
+
+function loadRelated(
+    videos,
+    currentId
+) {
 
     const box =
-        document.getElementById('relatedVideos');
+        document.getElementById(
+            'relatedVideos'
+        );
 
     const related =
         videos
-            .filter(item =>
-                String(item.id) !== String(currentId) &&
-                item.isShort !== true
+            .filter(
+                item =>
+                    String(item.id) !==
+                    String(currentId) &&
+                    item.isShort !== true
             )
             .slice()
             .reverse()
             .slice(0, 10);
 
-    box.innerHTML = related.map(item => {
+    box.innerHTML =
+        related.map(
+            item => {
 
-        const source = getSource(item);
+                const source =
+                    getSource(item);
 
-        return `
+                return `
 
-            <div class="related-card"
-                 data-id="${escapeHtml(item.id)}">
+                <div
+                    class="related-card"
+                    data-id="${escapeHtml(
+                        item.id
+                    )}">
 
-                <video
-                    src="${escapeHtml(source)}"
-                    muted
-                    preload="metadata">
-                </video>
+                    <video
+                        src="${escapeHtml(
+                            source
+                        )}"
+                        muted
+                        preload="metadata">
+                    </video>
 
-                <div>
-                    ${escapeHtml(item.title || 'Untitled Video')}
+                    <div>
+                        ${escapeHtml(
+                            item.title ||
+                            'Untitled Video'
+                        )}
+                    </div>
+
                 </div>
 
-            </div>
+                `;
 
-        `;
+            }
+        ).join('');
 
-    }).join('');
 
-    box.querySelectorAll('.related-card')
-        .forEach(card => {
+    box.querySelectorAll(
+        '.related-card'
+    ).forEach(
+        card => {
 
-            card.addEventListener('click', () => {
+            card.addEventListener(
+                'click',
+                () => {
 
-                location.href =
-                    `/watch.html?video=${encodeURIComponent(card.dataset.id)}`;
+                    location.href =
+                        `/watch.html?video=${
+                            encodeURIComponent(
+                                card.dataset.id
+                            )
+                        }`;
 
-            });
+                }
+            );
 
-        });
+        }
+    );
 
 }
 
-/* BACK */
 
-document.getElementById('backBtn')
-    .addEventListener('click', () => {
+/* =====================================================
+   BACK
+   ===================================================== */
+
+document.getElementById(
+    'backBtn'
+).addEventListener(
+    'click',
+    () => {
 
         if (history.length > 1) {
+
             history.back();
+
         } else {
-            location.href = '/home.html';
+
+            location.href =
+                '/home.html';
+
         }
 
-    });
+    }
+);
 
-/* OUTSIDE CLICK = CLOSE SETTINGS */
 
-document.addEventListener('click', event => {
+/* =====================================================
+   OUTSIDE CLICK
+   ===================================================== */
 
-    if (!event.target.closest('.settings-menu') &&
-        !event.target.closest('.sub-menu') &&
-        !event.target.closest('#settingsBtn')) {
+document.addEventListener(
+    'click',
+    event => {
 
-        closeAllMenus();
+        if (
+            !event.target.closest(
+                '.settings-menu'
+            ) &&
+            !event.target.closest(
+                '.sub-menu'
+            ) &&
+            !event.target.closest(
+                '#settingsBtn'
+            )
+        ) {
+
+            closeAllMenus();
+
+        }
 
     }
+);
 
-});
 
-/* START */
+/* =====================================================
+   START
+   ===================================================== */
 
 loadVideo();
