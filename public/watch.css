@@ -1,0 +1,766 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f6f7;
+    color: #111;
+}
+
+.watch-header {
+    height: 62px;
+    background: white;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 0 18px;
+    border-bottom: 1px solid #ddd;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.watch-header strong {
+    font-size: 24px;
+    letter-spacing: 1px;
+}
+
+.back-btn {
+    border: 0;
+    background: #eee;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-size: 25px;
+}
+
+.watch-page {
+    max-width: 1250px;
+    margin: auto;
+    padding: 18px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 350px;
+    gap: 24px;
+}
+
+.player-section {
+    min-width: 0;
+}
+
+.player {
+    position: relative;
+    width: 100%;
+    background: #000;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.player video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    background: #000;
+}
+
+.loading {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    background: rgba(0,0,0,.25);
+    font-size: 18px;
+}
+
+.loading.show {
+    display: flex;
+}
+
+.center-play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.center-play.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.controls {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px 14px 12px;
+    background: linear-gradient(transparent, rgba(0,0,0,.85));
+    color: white;
+}
+
+.progress-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+#progress {
+    flex: 1;
+    accent-color: #ff1744;
+}
+
+.control-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.control-row button {
+    border: 0;
+    background: transparent;
+    color: white;
+    font-size: 21px;
+    padding: 5px 7px;
+    cursor: pointer;
+}
+
+.control-row .video-control {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.volume {
+    width: 75px;
+    accent-color: white;
+}
+
+.control-spacer {
+    flex: 1;
+}
+
+/* SETTINGS INSIDE VIDEO */
+
+.settings-menu,
+.sub-menu {
+    position: absolute;
+    right: 12px;
+    bottom: 58px;
+    width: 285px;
+    max-width: calc(100% - 24px);
+    background: rgba(25,25,25,.97);
+    color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    display: none;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5);
+    z-index: 20;
+}
+
+.settings-menu.show,
+.sub-menu.show {
+    display: block;
+}
+
+.settings-title,
+.sub-header {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 15px;
+    border-bottom: 1px solid #444;
+}
+
+.settings-title button,
+.sub-header button {
+    margin-left: auto;
+    border: 0;
+    background: transparent;
+    color: white;
+    font-size: 19px;
+}
+
+.setting-item,
+.sub-menu > button {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: white;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+    text-align: left;
+}
+
+.setting-item:hover,
+.sub-menu > button:hover {
+    background: #333;
+}
+
+.video-info {
+    background: white;
+    margin-top: 12px;
+    padding: 16px;
+    border-radius: 12px;
+}
+
+.video-info h1 {
+    margin: 0 0 14px;
+    font-size: 23px;
+}
+
+.creator-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.creator-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #222;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.creator-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.creator-info small {
+    color: #777;
+    margin-top: 4px;
+}
+
+#subscribeBtn {
+    background: #111;
+    color: white;
+    border: 0;
+    padding: 11px 18px;
+    border-radius: 22px;
+    font-weight: bold;
+}
+
+.video-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.video-actions button {
+    border: 0;
+    background: #eee;
+    padding: 10px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.description {
+    margin-top: 14px;
+    line-height: 1.5;
+    color: #444;
+}
+
+.comments-section {
+    margin-top: 15px;
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.comments-section h2 {
+    margin-top: 0;
+}
+
+.comment {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.related-section {
+    background: transparent;
+}
+
+.related-section h2 {
+    margin-top: 0;
+}
+
+.related-card {
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.related-card video {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: #000;
+}
+
+.related-card div {
+    padding: 10px;
+    font-weight: bold;
+}
+
+@media (max-width: 850px) {
+
+    .watch-page {
+        display: block;
+        padding: 0;
+    }
+
+    .player {
+        border-radius: 0;
+    }
+
+    .video-info,
+    .comments-section {
+        border-radius: 0;
+    }
+
+    .related-section {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .watch-header {
+        height: 55px;
+    }
+
+    .watch-header strong {
+        font-size: 21px;
+    }
+
+    .volume {
+        display: none;
+    }
+
+    .control-row {
+        gap: 2px;
+    }
+
+    .control-row button {
+        font-size: 19px;
+        padding: 4px;
+    }
+
+    .settings-menu,
+    .sub-menu {
+        bottom: 55px;
+        right: 8px;
+        width: 275px;
+    }
+
+    .center-play {
+        width: 62px;
+        height: 62px;
+    }
+
+    .video-info h1 {
+        font-size: 19px;
+    }
+}
+
+/* UDAAN — TOP VIDEO CONTROLS */
+.player .controls {
+    top: 0;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    padding: 10px 12px;
+    background: linear-gradient(rgba(0,0,0,.75), transparent);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.player .controls .progress-row {
+    order: 2;
+}
+
+.player .controls .control-row {
+    order: 1;
+    justify-content: flex-end;
+}
+
+.player .controls .control-spacer,
+.player .controls .volume {
+    display: none;
+}
+
+.player .settings-menu,
+.player .sub-menu {
+    top: 58px;
+    bottom: auto;
+    right: 12px;
+}
+
+
+/* =====================================================
+   UDAAN WATCH PAGE — YOUTUBE STYLE VIDEO CONTROLS
+   ===================================================== */
+
+/* Controls ka poora layer video ke upar */
+.player .controls {
+    position: absolute;
+    inset: 0;
+    bottom: auto;
+    height: 100%;
+    padding: 0;
+    background: transparent;
+    pointer-events: none;
+    display: block;
+}
+
+/* TOP CONTROL BAR */
+.player .control-row {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+    pointer-events: auto;
+    z-index: 10;
+}
+
+/* Top bar par sirf CC + Settings + Fullscreen */
+.player .control-row #playBtn,
+.player .control-row #muteBtn,
+.player .control-row #volume {
+    display: none;
+}
+
+.player .control-row .control-spacer {
+    display: block;
+    flex: 1;
+}
+
+/* CC */
+.player #ccBtn {
+    font-size: 18px;
+    font-weight: 800;
+    color: white;
+    padding: 6px;
+}
+
+/* Settings */
+.player #settingsBtn {
+    font-size: 27px;
+    color: white;
+    padding: 4px;
+}
+
+/* Fullscreen */
+.player #fullscreenBtn {
+    font-size: 27px;
+    color: white;
+    padding: 4px;
+}
+
+/* TOP BUTTONS */
+.player .control-row button {
+    background: transparent;
+    border: 0;
+    text-shadow: 0 1px 4px #000;
+}
+
+/* PROGRESS BAR — VIDEO KE BOTTOM MEIN */
+.player .progress-row {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 7px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-size: 13px;
+    pointer-events: auto;
+    z-index: 11;
+}
+
+/* Progress */
+.player #progress {
+    flex: 1;
+    height: 5px;
+    margin: 0;
+    accent-color: #ff1744;
+}
+
+/* Center Play */
+.player .center-play {
+    z-index: 15;
+}
+
+/* SETTINGS POPUP — VIDEO KE ANDAR */
+.player .settings-menu,
+.player .sub-menu {
+    position: absolute;
+    top: 58px;
+    bottom: auto;
+    right: 10px;
+    width: 285px;
+    max-width: calc(100% - 20px);
+    z-index: 50;
+}
+
+/* SETTINGS ITEMS */
+.player .setting-item,
+.player .sub-menu > button {
+    min-height: 52px;
+    font-size: 16px;
+}
+
+/* MOBILE WATCH PAGE */
+@media (max-width: 850px) {
+
+    .watch-page {
+        display: block;
+        padding: 0;
+    }
+
+    .player-section {
+        width: 100%;
+    }
+
+    .player {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 0;
+    }
+
+    .player video {
+        width: 100%;
+        height: 100%;
+    }
+
+    .video-info {
+        margin-top: 0;
+        border-radius: 0;
+    }
+
+    .comments-section {
+        border-radius: 0;
+    }
+
+    .related-section {
+        padding: 15px;
+    }
+}
+
+/* PHONE */
+@media (max-width: 600px) {
+
+    .player .control-row {
+        top: 7px;
+        right: 9px;
+        left: 9px;
+        gap: 11px;
+    }
+
+    .player #ccBtn {
+        font-size: 17px;
+    }
+
+    .player #settingsBtn,
+    .player #fullscreenBtn {
+        font-size: 25px;
+    }
+
+    .player .progress-row {
+        left: 10px;
+        right: 10px;
+        bottom: 5px;
+        font-size: 12px;
+    }
+
+    .player #progress {
+        height: 4px;
+    }
+
+    .player .settings-menu,
+    .player .sub-menu {
+        top: 52px;
+        right: 8px;
+        width: 285px;
+        max-height: calc(100% - 60px);
+        overflow-y: auto;
+    }
+
+    .player .center-play {
+        width: 64px;
+        height: 64px;
+    }
+}
+
+/* VIDEO TOP GRADIENT */
+.player::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 85px;
+    background: linear-gradient(
+        rgba(0,0,0,.65),
+        rgba(0,0,0,0)
+    );
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* Bottom gradient */
+.player::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 75px;
+    background: linear-gradient(
+        rgba(0,0,0,0),
+        rgba(0,0,0,.75)
+    );
+    pointer-events: none;
+    z-index: 5;
+}
+
+.player .controls,
+.player .center-play {
+    z-index: 10;
+}
+
+
+
+/* =====================================================
+   FINAL YOUTUBE STYLE — FULLSCREEN BOTTOM RIGHT
+   ===================================================== */
+
+.player .control-row {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    right: 10px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    pointer-events: none;
+}
+
+.player .control-row #ccBtn,
+.player .control-row #settingsBtn {
+    pointer-events: auto;
+}
+
+/* Fullscreen / Zoom icon video ke BOTTOM RIGHT */
+.player .control-row #fullscreenBtn {
+    position: fixed;
+    right: auto;
+    pointer-events: auto;
+}
+
+/* Existing top control ko hide karke fullscreen ko
+   player ke bottom-right mein place karo */
+.player #fullscreenBtn {
+    position: absolute;
+    top: calc(100vh - 100px);
+    right: 12px;
+    z-index: 100;
+}
+
+/* Mobile: video ke bottom-right */
+@media (max-width: 850px) {
+    .player #fullscreenBtn {
+        position: absolute;
+        top: auto;
+        bottom: 38px;
+        right: 12px;
+    }
+}
+
+/* Progress bar fullscreen se left side rahe */
+.player .progress-row {
+    padding-right: 48px;
+}
+
+
+/* ===== UDAAN FINAL FULLSCREEN / ZOOM BUTTON ===== */
+
+.player #fullscreenBtn {
+    position: absolute !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+
+    right: 12px !important;
+    bottom: 30px !important;
+    top: auto !important;
+    left: auto !important;
+
+    width: 42px;
+    height: 42px;
+    padding: 0 !important;
+
+    color: #fff !important;
+    background: transparent !important;
+    border: 0 !important;
+
+    font-size: 28px !important;
+    line-height: 1;
+
+    z-index: 200 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+
+    text-shadow: 0 1px 5px #000;
+    cursor: pointer;
+}
+
+.player #fullscreenBtn:hover {
+    transform: scale(1.08);
+}
+
+@media (max-width: 600px) {
+    .player #fullscreenBtn {
+        right: 8px !important;
+        bottom: 30px !important;
+        width: 40px;
+        height: 40px;
+        font-size: 25px !important;
+    }
+}
+

@@ -31,7 +31,10 @@ window.udaanVideoObserver = new IntersectionObserver((entries, observer) => {
 async function loadVideos() {
     try {
         const response = await fetch('/api/videos');
-        const videos = await response.json();
+        let videos = await response.json();
+
+        // Shorts ko Home feed se hide rakho
+        videos = videos.filter(video => video.isShort !== true);
 
         if (!videosContainer) return;
 
@@ -50,6 +53,7 @@ async function loadVideos() {
         videos.slice().reverse().forEach(video => {
             const article = document.createElement('article');
             article.className = 'video dynamic-video';
+              article.dataset.videoId = String(video.id);
 
             article.innerHTML = `
                 <div class="video-player-wrap">
@@ -59,17 +63,6 @@ async function loadVideos() {
                         preload="none"
                         data-src="${video.qualities?.original || `/uploads/${encodeURIComponent(video.filename)}`}">
                     </video>
-
-                    <div class="quality-control">
-                        <button class="quality-btn" type="button">⚙️ Quality</button>
-                        <select class="quality-select">
-                            <option value="auto">Auto</option>
-                            ${video.qualities?.["360p"] ? '<option value="360p">360p</option>' : ''}
-                            ${video.qualities?.["480p"] ? '<option value="480p">480p</option>' : ''}
-                            ${video.qualities?.["720p"] ? '<option value="720p">720p</option>' : ''}
-                            ${video.qualities?.["1080p"] ? '<option value="1080p">1080p</option>' : ''}
-                        </select>
-                    </div>
                 </div>
 
                 <div class="video-info">
@@ -96,13 +89,23 @@ async function loadVideos() {
                         </small>
 
                         <div class="video-actions">
-                            <button class="like-btn" data-id="${video.id}">
-                                ❤️ <span>${video.likes || 0}</span>
+
+                            <button class="like-btn" data-id="${video.id}" title="Like">
+                                ♡ <span>${video.likes || 0}</span>
                             </button>
 
-                            <span class="comment-count">
-                                💬 ${(video.comments || []).length}
-                            </span>
+                            <button class="home-comment-btn" data-id="${video.id}" title="Comments">
+                                💬 <span>${(video.comments || []).length}</span>
+                            </button>
+
+                            <button class="home-share-btn" data-id="${video.id}" title="Share">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M4 12h13"/>
+                                    <path d="m13 6 6 6-6 6"/>
+                                </svg>
+                                <span>Share</span>
+                            </button>
+
                         </div>
 
                         <div class="comments-box">
@@ -428,6 +431,89 @@ document.getElementById('createBtn')?.addEventListener('click', () => {
     window.location.href = '/upload.html';
 });
 
+document.getElementById('shortsBtn')?.addEventListener('click', () => {
+    window.location.href = '/shorts.html';
+});
+
+
+// CREATOR PROFILE NAVIGATION
+document.addEventListener('click', (event) => {
+    const creator = event.target.closest('.creator-name, .creator-avatar');
+
+    if (!creator) return;
+
+    const username =
+        creator.dataset.username ||
+        creator.closest('.video-info')?.querySelector('.creator-name')?.dataset.username;
+
+    if (!username) return;
+
+    window.location.href =
+        '/profile.html?username=' + encodeURIComponent(username);
+});
+
+
+// HOME VIDEO SHARE
+document.addEventListener('click', async (event) => {
+    const button = event.target.closest('.home-share-btn');
+
+    if (!button) return;
+
+    event.stopPropagation();
+
+    const id = button.dataset.id;
+
+    if (!id) return;
+
+    const shareUrl =
+        `${window.location.origin}/home.html?video=${encodeURIComponent(id)}`;
+
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: 'Watch this video on UdaanTV',
+                text: 'Watch this video on UdaanTV 🚀',
+                url: shareUrl
+            });
+        } else if (navigator.clipboard) {
+            await navigator.clipboard.writeText(shareUrl);
+            alert('Video link copied!');
+        } else {
+            window.prompt('Copy this video link:', shareUrl);
+        }
+    } catch (error) {
+        if (error.name !== 'AbortError') {
+            console.error('Home share error:', error);
+        }
+    }
+});
+
+
+document.getElementById('followingBtn')?.addEventListener('click', () => {
+    window.location.href = '/following.html';
+});
+
+
+/* WATCH PAGE NAVIGATION */
+document.addEventListener('click', event => {
+    const videoElement = event.target.closest('.video-player');
+
+    if (!videoElement) return;
+
+    const article = videoElement.closest('.video');
+
+    if (!article) return;
+
+    const videoId =
+        article.dataset.videoId ||
+        article.querySelector('[data-id]')?.dataset.id;
+
+    if (!videoId) return;
+
+    window.location.href =
+        `/watch.html?video=${encodeURIComponent(videoId)}`;
+});
+
 loadVideos();
 
 
@@ -570,43 +656,61 @@ searchInput?.addEventListener('input', () => {
     });
 });
 
-loadCreatorSuggestions();
 
 
 /* NOTIFICATION PANEL */
 
-const notificationBtn = document.getElementById('notificationBtn');
-const notificationPanel = document.getElementById('notificationPanel');
-const notificationList = document.getElementById('notificationList');
-const closeNotifications = document.getElementById('closeNotifications');
+const notificationBtn =
+    document.getElementById('notificationBtn');
+
+const notificationPanel =
+    document.getElementById('notificationPanel');
+
+const notificationList =
+    document.getElementById('notificationList');
+
+const closeNotifications =
+    document.getElementById('closeNotifications');
+
+const markAllNotificationsRead =
+    document.getElementById('markAllNotificationsRead');
+
+const notificationUnreadText =
+    document.getElementById('notificationUnreadText');
 
 let notificationData = [];
 
-function updateNotificationBadge(notifications) {
-    const unreadCount = notifications.filter(n => !n.read).length;
 
-    let badge = document.getElementById('notificationBadge');
+function updateNotificationBadge(notifications) {
+
+    const unreadCount =
+        notifications.filter(n => !n.read).length;
+
+    let badge =
+        document.getElementById('notificationBadge');
 
     if (!badge) {
+
         badge = document.createElement('span');
+
         badge.id = 'notificationBadge';
 
         Object.assign(badge.style, {
             position: 'absolute',
-            top: '-4px',
-            right: '-4px',
+            top: '-5px',
+            right: '-5px',
             minWidth: '18px',
             height: '18px',
             padding: '0 4px',
             borderRadius: '10px',
             background: '#ff3040',
             color: '#fff',
-            fontSize: '11px',
+            fontSize: '10px',
             fontWeight: '700',
             display: 'none',
             alignItems: 'center',
             justifyContent: 'center',
-            border: '2px solid #111',
+            border: '2px solid #fff',
             zIndex: '20'
         });
 
@@ -615,130 +719,507 @@ function updateNotificationBadge(notifications) {
     }
 
     if (unreadCount > 0) {
-        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+
+        badge.textContent =
+            unreadCount > 99 ? '99+' : unreadCount;
+
         badge.style.display = 'flex';
+
+        if (notificationUnreadText) {
+            notificationUnreadText.textContent =
+                `${unreadCount} unread`;
+        }
+
     } else {
+
         badge.style.display = 'none';
+
+        if (notificationUnreadText) {
+            notificationUnreadText.textContent =
+                'No new notifications';
+        }
     }
 }
 
-async function loadNotifications() {
-    const savedUser = localStorage.getItem('udaan_user');
 
-    if (!savedUser) {
-        notificationList.innerHTML = '<p>Please login first.</p>';
-        updateNotificationBadge([]);
+function notificationIcon(notification) {
+
+    if (notification.type === 'subscribe') {
+        return '👤';
+    }
+
+    if (notification.type === 'like') {
+        return '❤️';
+    }
+
+    if (notification.type === 'comment') {
+        return '💬';
+    }
+
+    return '🔔';
+}
+
+
+function renderNotifications() {
+
+    updateNotificationBadge(notificationData);
+
+    if (!notificationData.length) {
+
+        notificationList.innerHTML = `
+            <div class="notification-empty">
+                <div>🔔</div>
+                <strong>No notifications yet</strong>
+                <span>Your creator activity will appear here.</span>
+            </div>
+        `;
+
         return;
     }
 
-    try {
-        const user = JSON.parse(savedUser);
+    notificationList.innerHTML =
+        notificationData.map(notification => {
 
-        const response = await fetch(
-            `/api/notifications/${encodeURIComponent(user.username)}`
-        );
+            const unread =
+                !notification.read;
 
-        if (!response.ok) {
-            throw new Error('Unable to load notifications');
-        }
+            const unreadClass =
+                unread ? ' unread' : '';
 
-        notificationData = await response.json();
+            const icon =
+                notificationIcon(notification);
 
-        updateNotificationBadge(notificationData);
+            let time = '';
 
-        if (!notificationData.length) {
-            notificationList.innerHTML =
-                '<p>No notifications yet.</p>';
-            return;
-        }
-
-        notificationList.innerHTML = notificationData.map(notification => {
-            const unreadClass = notification.read ? '' : ' unread';
+            try {
+                time = new Date(
+                    notification.created_at
+                ).toLocaleString();
+            } catch (_) {
+                time = '';
+            }
 
             return `
                 <div
                     class="notification-item${unreadClass}"
                     data-notification-id="${escapeHtml(notification.id)}"
                 >
-                    <strong>
-                        ${notification.read ? '🔔' : '🔴'}
-                        ${escapeHtml(notification.message)}
-                    </strong>
-                    <small>
-                        ${new Date(notification.created_at).toLocaleString()}
-                    </small>
+
+                    <div class="notification-icon">
+                        ${icon}
+                    </div>
+
+                    <div class="notification-content">
+
+                        <strong>
+                            ${escapeHtml(notification.message)}
+                        </strong>
+
+                        <small>
+                            ${escapeHtml(time)}
+                        </small>
+
+                    </div>
+
+                    ${unread
+                        ? '<span class="notification-dot"></span>'
+                        : ''
+                    }
+
                 </div>
             `;
+
         }).join('');
 
-        notificationList
-            .querySelectorAll('.notification-item')
-            .forEach(item => {
-                item.addEventListener('click', async () => {
-                    const notificationId =
-                        item.dataset.notificationId;
 
-                    try {
-                        await fetch(
-                            `/api/notifications/${encodeURIComponent(user.username)}/${encodeURIComponent(notificationId)}/read`,
-                            {
-                                method: 'POST'
-                            }
+    notificationList
+        .querySelectorAll('.notification-item')
+        .forEach(item => {
+
+            item.addEventListener('click', async () => {
+
+                const notificationId =
+                    item.dataset.notificationId;
+
+                const savedUser =
+                    localStorage.getItem('udaan_user');
+
+                if (!savedUser) return;
+
+                let user;
+
+                try {
+                    user = JSON.parse(savedUser);
+                } catch {
+                    return;
+                }
+
+                try {
+
+                    await fetch(
+                        `/api/notifications/${encodeURIComponent(user.username)}/${encodeURIComponent(notificationId)}/read`,
+                        {
+                            method: 'POST'
+                        }
+                    );
+
+                    const notification =
+                        notificationData.find(
+                            n =>
+                                String(n.id) ===
+                                String(notificationId)
                         );
 
-                        const notification =
-                            notificationData.find(
-                                n => String(n.id) === String(notificationId)
-                            );
-
-                        if (notification) {
-                            notification.read = true;
-                        }
-
-                        item.classList.remove('unread');
-
-                        const strong = item.querySelector('strong');
-
-                        if (strong) {
-                            strong.textContent =
-                                '🔔 ' +
-                                (notification?.message || '');
-                        }
-
-                        updateNotificationBadge(notificationData);
-
-                    } catch (error) {
-                        console.error(
-                            'Notification read error:',
-                            error
-                        );
+                    if (notification) {
+                        notification.read = true;
                     }
-                });
+
+                    renderNotifications();
+
+                } catch (error) {
+
+                    console.error(
+                        'Notification read error:',
+                        error
+                    );
+                }
             });
+        });
+}
+
+
+async function loadNotifications() {
+
+    const savedUser =
+        localStorage.getItem('udaan_user');
+
+    if (!savedUser) {
+
+        notificationData = [];
+
+        notificationList.innerHTML = `
+            <div class="notification-empty">
+                <div>🔐</div>
+                <strong>Please login first</strong>
+            </div>
+        `;
+
+        updateNotificationBadge([]);
+
+        return;
+    }
+
+    try {
+
+        const user =
+            JSON.parse(savedUser);
+
+        const response = await fetch(
+            `/api/notifications/${encodeURIComponent(user.username)}`
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                'Unable to load notifications'
+            );
+        }
+
+        notificationData =
+            await response.json();
+
+        renderNotifications();
 
     } catch (error) {
+
         console.error(
             'Notification loading error:',
             error
         );
 
-        notificationList.innerHTML =
-            '<p>Unable to load notifications.</p>';
+        notificationList.innerHTML = `
+            <div class="notification-empty">
+                <div>⚠️</div>
+                <strong>Unable to load notifications</strong>
+            </div>
+        `;
     }
 }
 
-notificationBtn?.addEventListener('click', async () => {
-    notificationPanel.classList.toggle('show');
 
-    if (notificationPanel.classList.contains('show')) {
-        await loadNotifications();
+async function markAllNotificationsAsRead() {
+
+    const savedUser =
+        localStorage.getItem('udaan_user');
+
+    if (!savedUser) return;
+
+    let user;
+
+    try {
+        user = JSON.parse(savedUser);
+    } catch {
+        return;
     }
+
+    const unread =
+        notificationData.filter(
+            notification => !notification.read
+        );
+
+    if (!unread.length) return;
+
+    markAllNotificationsRead.disabled = true;
+    markAllNotificationsRead.textContent = 'Please wait...';
+
+    try {
+
+        await Promise.all(
+            unread.map(notification =>
+                fetch(
+                    `/api/notifications/${encodeURIComponent(user.username)}/${encodeURIComponent(notification.id)}/read`,
+                    {
+                        method: 'POST'
+                    }
+                )
+            )
+        );
+
+        notificationData =
+            notificationData.map(notification => ({
+                ...notification,
+                read: true
+            }));
+
+        renderNotifications();
+
+    } catch (error) {
+
+        console.error(
+            'Mark all notifications error:',
+            error
+        );
+
+    } finally {
+
+        markAllNotificationsRead.disabled = false;
+        markAllNotificationsRead.textContent =
+            'Mark all read';
+    }
+}
+
+
+notificationBtn?.addEventListener(
+    'click',
+    async event => {
+
+        event.stopPropagation();
+
+        notificationPanel.classList.toggle('show');
+
+        if (
+            notificationPanel.classList.contains('show')
+        ) {
+            await loadNotifications();
+        }
+    }
+);
+
+
+closeNotifications?.addEventListener(
+    'click',
+    event => {
+
+        event.stopPropagation();
+
+        notificationPanel.classList.remove('show');
+    }
+);
+
+
+markAllNotificationsRead?.addEventListener(
+    'click',
+    event => {
+
+        event.stopPropagation();
+
+        markAllNotificationsAsRead();
+    }
+);
+
+
+notificationPanel?.addEventListener(
+    'click',
+    event => {
+        event.stopPropagation();
+    }
+);
+
+
+document.addEventListener(
+    'click',
+    () => {
+
+        notificationPanel?.classList.remove('show');
+    }
+);
+
+/* UDAAN WATCH PAGE NAVIGATION - FINAL */
+
+document.addEventListener("click", (event) => {
+
+    const article = event.target.closest(".dynamic-video");
+
+    if (!article) return;
+
+    /* Controls par click hone par Watch Page mat kholo */
+    if (
+        event.target.closest(
+            "button, input, select, textarea, a, .quality-control, .comments-box"
+        )
+    ) {
+        return;
+    }
+
+    /* Video player ke controls ko disturb mat karo */
+    if (event.target.closest("video")) {
+        return;
+    }
+
+    /* Video ID kisi bhi existing data-id button se nikalo */
+    const idElement = article.querySelector("[data-id]");
+
+    const videoId = idElement?.dataset?.id;
+
+    if (!videoId) {
+        console.error("Watch navigation: video ID missing");
+        return;
+    }
+
+    window.location.href =
+        "/watch.html?video=" +
+        encodeURIComponent(videoId);
 });
 
-closeNotifications?.addEventListener('click', () => {
-    notificationPanel.classList.remove('show');
+
+/* Har dynamic video card mein clear WATCH button */
+function addWatchButtons() {
+
+    document.querySelectorAll(".dynamic-video").forEach(article => {
+
+        if (article.querySelector(".watch-now-btn")) {
+            return;
+        }
+
+        const idElement = article.querySelector("[data-id]");
+
+        if (!idElement?.dataset?.id) {
+            return;
+        }
+
+        const videoId = idElement.dataset.id;
+
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "watch-now-btn";
+        button.textContent = "▶ Watch";
+
+        button.addEventListener("click", (event) => {
+
+            event.stopPropagation();
+
+            window.location.href =
+                "/watch.html?video=" +
+                encodeURIComponent(videoId);
+        });
+
+        const info = article.querySelector(".video-info");
+
+        if (info) {
+            info.appendChild(button);
+        }
+    });
+}
+
+
+/* Dynamic videos load hone ke baad button add karo */
+const watchButtonObserver = new MutationObserver(() => {
+    addWatchButtons();
 });
 
-/* Load unread notification badge on page start */
-loadNotifications();
+if (videosContainer) {
+
+    watchButtonObserver.observe(videosContainer, {
+        childList: true,
+        subtree: true
+    });
+
+    addWatchButtons();
+}
+
+
+/* =========================================
+   UDAAN STICKY PLAYING VIDEO
+   Currently playing video stays stable
+   while feed scrolls.
+========================================= */
+
+document.addEventListener("play", (event) => {
+
+    const video = event.target;
+
+    if (!video.matches(".video-player")) {
+        return;
+    }
+
+    /* Pehle sab playing video ko normal karo */
+    document
+        .querySelectorAll(".video-player-wrap.is-playing")
+        .forEach(wrap => {
+            wrap.classList.remove("is-playing");
+        });
+
+    /* Sirf current video sticky rahe */
+    const wrap = video.closest(".video-player-wrap");
+
+    if (wrap) {
+        wrap.classList.add("is-playing");
+    }
+
+}, true);
+
+
+document.addEventListener("pause", (event) => {
+
+    const video = event.target;
+
+    if (!video.matches(".video-player")) {
+        return;
+    }
+
+    const wrap = video.closest(".video-player-wrap");
+
+    if (wrap) {
+        wrap.classList.remove("is-playing");
+    }
+
+}, true);
+
+
+/* Video end hone par normal position */
+document.addEventListener("ended", (event) => {
+
+    const video = event.target;
+
+    if (!video.matches(".video-player")) {
+        return;
+    }
+
+    const wrap = video.closest(".video-player-wrap");
+
+    if (wrap) {
+        wrap.classList.remove("is-playing");
+    }
+
+}, true);
 

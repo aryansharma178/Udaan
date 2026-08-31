@@ -21,9 +21,19 @@
         <button id="notificationBtn">🔔</button>
 <div id="notificationPanel" class="notification-panel">
     <div class="notification-header">
-        <strong>Notifications</strong>
-        <button id="closeNotifications">✕</button>
+        <div>
+            <strong>Notifications</strong>
+            <small id="notificationUnreadText">No new notifications</small>
+        </div>
+
+        <div class="notification-header-actions">
+            <button id="markAllNotificationsRead" type="button">
+                Mark all read
+            </button>
+            <button id="closeNotifications" type="button">✕</button>
+        </div>
     </div>
+
     <div id="notificationList">
         <p>No notifications yet.</p>
     </div>
@@ -159,7 +169,7 @@
         <span>Home</span>
     </button>
 
-    <button>
+    <button id="shortsBtn" onclick="window.location.href='/shorts.html'">
         <strong>▶</strong>
         <span>Shorts</span>
     </button>
@@ -169,7 +179,7 @@
         <span>Create</span>
     </button>
 
-    <button>
+    <button id="followingBtn">
         <strong>▣</strong>
         <span>Following</span>
     </button>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>UDAAN - Watch</title>
+    <link rel="stylesheet" href="/watch.css">
+</head>
+
+<body>
+
+<header class="watch-header">
+    <button id="backBtn" class="back-btn">←</button>
+    <strong>UDAAN</strong>
+</header>
+
+<main class="watch-page">
+
+    <section class="player-section">
+
+        <div id="player" class="player">
+
+            <video id="video"
+                   playsinline
+                   preload="metadata"></video>
+
+            <div id="loading" class="loading">Loading...</div>
+
+            <div class="center-play" id="centerPlay">▶</div>
+
+            <div class="controls">
+
+                <div class="progress-row">
+                    <span id="currentTime">0:00</span>
+
+                    <input id="progress"
+                           type="range"
+                           min="0"
+                           max="100"
+                           value="0">
+
+                    <span id="duration">0:00</span>
+                </div>
+
+                <div class="control-row">
+
+                    <button id="playBtn" title="Play/Pause">▶</button>
+
+                    <button id="muteBtn" title="Mute">🔊</button>
+
+                    <input id="volume"
+                           class="volume"
+                           type="range"
+                           min="0"
+                           max="1"
+                           step="0.05"
+                           value="1">
+
+                    <div class="control-spacer"></div>
+
+                    <!-- CC INSIDE VIDEO -->
+                    <button id="ccBtn"
+                            class="video-control"
+                            title="Captions">CC</button>
+
+                    <!-- SETTINGS INSIDE VIDEO -->
+                    <button id="settingsBtn"
+                            class="video-control"
+                            title="Settings">⚙</button>
+
+                    <button id="fullscreenBtn"
+                            title="Fullscreen">⛶</button>
+                </div>
+
+            </div>
+
+            <!-- SETTINGS MENU -->
+            <div id="settingsMenu" class="settings-menu">
+
+                <div class="settings-title">
+                    <span>⚙️</span>
+                    <strong>Settings</strong>
+                    <button id="closeSettings">✕</button>
+                </div>
+
+                <button class="setting-item" id="qualitySetting">
+                    <span>🎚️ Quality</span>
+                    <span id="qualityValue">Auto ›</span>
+                </button>
+
+                <button class="setting-item" id="speedSetting">
+                    <span>▶️ Playback speed</span>
+                    <span id="speedValue">1x ›</span>
+                </button>
+
+                <button class="setting-item" id="captionSetting">
+                    <span>CC Captions</span>
+                    <span id="captionValue">Off ›</span>
+                </button>
+
+            </div>
+
+            <!-- QUALITY MENU -->
+            <div id="qualityMenu" class="sub-menu">
+
+                <div class="sub-header">
+                    <button id="qualityBack">←</button>
+                    <strong>Quality</strong>
+                </div>
+
+                <button data-quality="auto">Auto</button>
+                <button data-quality="360p">360p</button>
+                <button data-quality="480p">480p</button>
+                <button data-quality="720p">720p</button>
+                <button data-quality="1080p">1080p</button>
+
+            </div>
+
+            <!-- SPEED MENU -->
+            <div id="speedMenu" class="sub-menu">
+
+                <div class="sub-header">
+                    <button id="speedBack">←</button>
+                    <strong>Playback speed</strong>
+                </div>
+
+                <button data-speed="0.25">0.25x</button>
+                <button data-speed="0.5">0.5x</button>
+                <button data-speed="0.75">0.75x</button>
+                <button data-speed="1">Normal</button>
+                <button data-speed="1.25">1.25x</button>
+                <button data-speed="1.5">1.5x</button>
+                <button data-speed="1.75">1.75x</button>
+                <button data-speed="2">2x</button>
+
+            </div>
+
+            <!-- CAPTION MENU -->
+            <div id="captionMenu" class="sub-menu">
+
+                <div class="sub-header">
+                    <button id="captionBack">←</button>
+                    <strong>Captions</strong>
+                </div>
+
+                <button data-caption="off">Off</button>
+                <button data-caption="on">Hindi</button>
+
+            </div>
+
+        </div>
+
+        <section class="video-info">
+
+            <h1 id="videoTitle">Loading video...</h1>
+
+            <div class="creator-row">
+
+                <div id="creatorAvatar" class="creator-avatar">U</div>
+
+                <div class="creator-info">
+                    <strong id="creatorName">@creator</strong>
+                    <small id="videoStats">0 views</small>
+                </div>
+
+                <button id="subscribeBtn">Subscribe</button>
+
+            </div>
+
+            <div class="video-actions">
+
+                <button id="likeBtn">♡ <span id="likeCount">0</span></button>
+
+                <button id="shareBtn">↗ Share</button>
+
+                <button id="moreBtn">•••</button>
+
+            </div>
+
+            <div class="description" id="description"></div>
+
+        </section>
+
+        <section class="comments-section">
+
+            <h2>Comments</h2>
+
+            <div id="comments"></div>
+
+        </section>
+
+    </section>
+
+    <aside class="related-section">
+
+        <h2>Next videos</h2>
+
+        <div id="relatedVideos"></div>
+
+    </aside>
+
+</main>
+
+<script src="/watch.js"></script>
+
+</body>
+</html>
