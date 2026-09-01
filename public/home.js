@@ -146,6 +146,23 @@ async function loadVideos() {
             if (playerWrap && player) {
                 player.controls = false;
 
+                /* UDAAN STABLE VIDEO GATE */
+                playerWrap.classList.remove('player-ready');
+
+                const markPlayerReady = () => {
+                    if (player.readyState >= 3) {
+                        playerWrap.classList.add('player-ready');
+                    }
+                };
+
+                player.addEventListener('canplay', markPlayerReady);
+                player.addEventListener('playing', markPlayerReady);
+
+                player.addEventListener('error', () => {
+                    playerWrap.classList.remove('player-ready');
+                });
+
+
                 const controls = document.createElement('div');
                 controls.className = 'udaan-player-controls';
 

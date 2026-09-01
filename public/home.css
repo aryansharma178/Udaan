@@ -1056,16 +1056,25 @@ main {
 }
 
 .udaan-player-controls {
+    display: none;
     position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
     padding: 8px 10px;
     background: linear-gradient(transparent, rgba(0,0,0,.85));
-    display: flex;
+    display: none;
     align-items: center;
     gap: 7px;
     z-index: 5;
+}
+
+.video-player-wrap.player-ready .udaan-player-controls {
+    display: flex;
+}
+
+.udaan-player-controls.hidden {
+    display: none !important;
 }
 
 .udaan-player-controls button {
