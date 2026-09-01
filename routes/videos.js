@@ -145,35 +145,15 @@ router.post('/upload', upload.single('video'), async (req, res) => {
             }
         };
 
-        console.log(`Starting video conversion: ${req.file.filename}`);
+        // Fast upload mode:
+        // Save original video immediately.
+        // Quality conversion is temporarily disabled for reliable
+        // uploads on the Render Free instance.
 
-        for (const [quality, height] of Object.entries(QUALITY_SETTINGS)) {
-            const outputName = `${baseName}-${quality}.mp4`;
-            const outputPath = path.join(uploadDir, outputName);
-
-            try {
-                await convertVideo(
-                    req.file.path,
-                    outputPath,
-                    height
-                );
-
-                if (fs.existsSync(outputPath)) {
-                    video.qualities[quality] =
-                        `/uploads/${outputName}`;
-
-                    console.log(
-                        `Created ${quality}: ${outputName}`
-                    );
-                }
-
-            } catch (conversionError) {
-                console.error(
-                    `FFmpeg ${quality} conversion failed:`,
-                    conversionError.message
-                );
-            }
-        }
+        console.log(
+            'Video uploaded successfully:',
+            req.file.filename
+        );
 
         const dataFile = path.join(__dirname, '../videos.json');
 
