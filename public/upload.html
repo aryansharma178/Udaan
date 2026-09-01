@@ -37,6 +37,12 @@
         <label>Description</label>
         <textarea id="description" placeholder="Tell viewers about your video"></textarea>
 
+        <label>Video Type</label>
+        <select id="videoType">
+            <option value="normal">🎬 Normal Video</option>
+            <option value="short">⚡ Shorts</option>
+        </select>
+
         <label>Category</label>
         <select id="category">
             <option value="">Select category</option>
@@ -76,6 +82,7 @@ uploadBtn.addEventListener('click', async () => {
     const title = document.getElementById('title').value.trim();
     const description = document.getElementById('description').value.trim();
     const category = document.getElementById('category').value;
+      const videoType = document.getElementById('videoType').value;
 
     if (!file) {
         message.textContent = "Please select a video.";
@@ -98,6 +105,7 @@ uploadBtn.addEventListener('click', async () => {
     formData.append("title", title);
     formData.append("description", description);
     formData.append("category", category);
+      formData.append("isShort", videoType === "short" ? "true" : "false");
 
     const savedUser = localStorage.getItem("udaan_user");
 

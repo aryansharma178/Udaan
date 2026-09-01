@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UdaanTV - Shorts</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .shorts-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: linear-gradient(to bottom, rgba(0,0,0,.8), transparent);
+        }
+
+        .shorts-header h2 {
+            margin: 0;
+            font-size: 21px;
+        }
+
+        .back-btn {
+            border: 0;
+            background: rgba(255,255,255,.15);
+            color: #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 22px;
+        }
+
+        #shortsFeed {
+            width: 100%;
+            height: 100vh;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+        }
+
+        #shortsFeed::-webkit-scrollbar {
+            display: none;
+        }
+
+        .short {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            scroll-snap-align: start;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .short video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .short-info {
+            position: absolute;
+            left: 16px;
+            right: 82px;
+            bottom: 24px;
+            z-index: 5;
+            text-shadow: 0 2px 7px #000;
+        }
+
+        .short-info h3 {
+            margin: 0 0 7px;
+            font-size: 18px;
+        }
+
+        .short-info p {
+            margin: 0;
+            font-size: 14px;
+            opacity: .9;
+        }
+
+        .short-creator {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 10px;
+        }
+
+        .short-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.18);
+            border: 1px solid rgba(255,255,255,.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .short-creator-name {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .subscribe-btn {
+            border: 1px solid rgba(255,255,255,.9);
+            background: #fff;
+            color: #111;
+            border-radius: 18px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .subscribe-btn:active {
+            transform: scale(.94);
+        }
+
+        .short-actions {
+            position: absolute;
+            right: 12px;
+            bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 13px;
+            z-index: 10;
+        }
+
+        .action-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .short-actions button {
+            width: 46px;
+            height: 46px;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            color: #fff;
+            font-size: 30px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 2px 7px rgba(0,0,0,.8);
+            transition: transform .15s ease, opacity .15s ease;
+        }
+
+        .short-actions button:active {
+            transform: scale(.88);
+        }
+
+        .short-actions button svg {
+            width: 30px;
+            height: 30px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .short-actions button.liked svg {
+            fill: currentColor;
+            stroke: currentColor;
+        }
+
+        .short-actions button:hover {
+            opacity: .85;
+        }
+
+        .short-actions button.liked {
+            color: #ff3040;
+        }
+
+        .action-count {
+            font-size: 12px;
+            font-weight: bold;
+            text-shadow: 0 1px 4px #000;
+        }
+
+        .comment-box {
+            display: none;
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            bottom: 90px;
+            z-index: 15;
+            background: rgba(20,20,20,.96);
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,.6);
+        }
+
+        .comment-box.show {
+            display: block;
+        }
+
+        .comment-list {
+            max-height: 170px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .comment-item {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+            font-size: 14px;
+        }
+
+        .comment-input-row {
+            display: flex;
+            gap: 7px;
+        }
+
+        .comment-input {
+            flex: 1;
+            min-width: 0;
+            border: 0;
+            outline: none;
+            border-radius: 20px;
+            padding: 10px 13px;
+            background: #333;
+            color: #fff;
+        }
+
+        .comment-send {
+            border: 0;
+            border-radius: 20px;
+            padding: 0 15px;
+            background: #fff;
+            color: #111;
+            font-weight: bold;
+        }
+
+        .empty,
+        .loading {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            font-size: 18px;
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 25px;
+            transform: translateX(-50%);
+            background: rgba(30,30,30,.95);
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 20px;
+            z-index: 50;
+            display: none;
+            font-size: 14px;
+        }
+
+        .toast.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="shorts-header">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h2>⚡ Shorts</h2>
+    <div></div>
+</header>
+
+<main id="shortsFeed">
+    <div class="loading">Loading Shorts... ⏳</div>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const shortsFeed = document.getElementById('shortsFeed');
+const toast = document.getElementById('toast');
+
+let shortsData = [];
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 1800);
+}
+
+function getCurrentUser() {
+    try {
+        const savedUser = localStorage.getItem('udaan_user');
+
+        if (!savedUser) return null;
+
+        return JSON.parse(savedUser);
+    } catch {
+        return null;
+    }
+}
+
+async function loadShorts() {
+    try {
+        const response = await fetch('/api/videos');
+
+        if (!response.ok) {
+            throw new Error('Unable to load videos');
+        }
+
+        const videos = await response.json();
+
+        shortsData = videos
+            .filter(video => video.isShort === true)
+            .slice()
+            .reverse();
+
+        if (!shortsData.length) {
+            shortsFeed.innerHTML = `
+                <div class="empty">
+                    ⚡<br><br>
+                    No Shorts available yet.<br>
+                    Upload your first Short on UdaanTV!
+                </div>
+            `;
+            return;
+        }
+
+        shortsFeed.innerHTML = shortsData.map((video, index) => {
+            const source =
+                video.qualities?.['720p'] ||
+                video.qualities?.['480p'] ||
+                video.qualities?.original ||
+                `/uploads/${encodeURIComponent(video.filename)}`;
+
+            const comments = video.comments || [];
+
+            return `
+                <section class="short" data-video-id="${escapeHtml(video.id)}">
+
+                    <video
+                        class="short-video"
+                        src="${escapeHtml(source)}"
+                        playsinline
+                        loop
+                        preload="metadata"
+                    ></video>
+
+                    <div class="short-info">
+
+                        <div class="short-creator"
+                             data-username="${escapeHtml(video.username || '')}">
+
+                            <div class="short-avatar">
+                                ${(video.username || video.title || 'U').charAt(0).toUpperCase()}
+                            </div>
+
+                            <div class="short-creator-name">
+                                @${escapeHtml(video.username || 'creator')}
+                            </div>
+
+                            <button
+                                class="subscribe-btn"
+                                type="button"
+                                data-username="${escapeHtml(video.username || '')}"
+                            >Subscribe</button>
+
+                        </div>
+
+                        <h3>${escapeHtml(video.title || 'Untitled Short')}</h3>
+
+                        <p>
+                            ${escapeHtml(video.description || '')}
+                        </p>
+
+                    </div>
+
+                    <div class="short-actions">
+
+                        <div class="action-wrap">
+                            <button
+                                class="like-btn"
+                                data-id="${escapeHtml(video.id)}"
+                                title="Like"
+                            ><svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20.8 8.7c0 5.2-8.8 10.3-8.8 10.3S3.2 13.9 3.2 8.7A4.7 4.7 0 0 1 12 6.3a4.7 4.7 0 0 1 8.8 2.4Z"/>
+    </svg></button>
+                            <span class="action-count like-count">
+                                ${video.likes || 0}
+                            </span>
+                        </div>
+
+                        <div class="action-wrap">
+                            <button
+                                class="comment-btn"
+                                data-id="${escapeHtml(video.id)}"
+                                title="Comments"
+                            ><svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H8l-4 2v-5.2A7.5 7.5 0 1 1 20 11.5Z"/>
+    </svg></button>
+                            <span class="action-count">
+                                ${comments.length}
+                            </span>
+                        </div>
+
+                        <div class="action-wrap">
+                            <button
+                                class="share-btn"
+                                data-id="${escapeHtml(video.id)}"
+                                title="Share"
+                            ><svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12h13"/>
+        <path d="m13 6 6 6-6 6"/>
+    </svg></button>
+                            <span class="action-count">Share</span>
+                        </div>
+
+                    </div>
+
+                    <div class="comment-box" id="comments-${escapeHtml(video.id)}">
+
+                        <div class="comment-list">
+                            ${
+                                comments.length
+                                ? comments.map(comment => `
+                                    <div class="comment-item">
+                                        ${escapeHtml(comment.text)}
+                                    </div>
+                                `).join('')
+                                : '<div class="comment-item">No comments yet.</div>'
+                            }
+                        </div>
+
+                        <div class="comment-input-row">
+                            <input
+                                class="comment-input"
+                                type="text"
+                                placeholder="Write a comment..."
+                                maxlength="500"
+                            >
+
+                            <button
+                                class="comment-send"
+                                data-id="${escapeHtml(video.id)}"
+                            >Send</button>
+                        </div>
+
+                    </div>
+
+                </section>
+            `;
+        }).join('');
+
+        setupShortsPlayback();
+        setupCreatorActions();
+        setupActions();
+
+    } catch (error) {
+        console.error('Shorts loading error:', error);
+
+        shortsFeed.innerHTML = `
+            <div class="empty">
+                Unable to load Shorts.
+            </div>
+        `;
+    }
+}
+
+function setupShortsPlayback() {
+    const items = document.querySelectorAll('.short');
+
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            const video = entry.target.querySelector('.short-video');
+
+            if (!video) return;
+
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.7) {
+
+                document.querySelectorAll('.short-video').forEach(other => {
+                    if (other !== video) {
+                        other.pause();
+                    }
+                });
+
+                video.play().catch(() => {});
+
+            } else {
+                video.pause();
+            }
+        });
+    }, {
+        threshold: [0.7]
+    });
+
+    items.forEach(item => observer.observe(item));
+}
+
+function setupCreatorActions() {
+
+    document.querySelectorAll('.short-creator-name, .short-avatar').forEach(element => {
+
+        element.addEventListener('click', event => {
+            event.stopPropagation();
+
+            const creator = element
+                .closest('.short-creator')
+                ?.dataset.username;
+
+            if (creator) {
+                window.location.href =
+                    `/profile.html?username=${encodeURIComponent(creator)}`;
+            }
+        });
+    });
+
+    document.querySelectorAll('.subscribe-btn').forEach(button => {
+
+        button.addEventListener('click', event => {
+            event.stopPropagation();
+
+            const user = getCurrentUser();
+
+            if (!user?.username) {
+                showToast('Please login first.');
+                return;
+            }
+
+            const creator = button.dataset.username;
+
+            if (creator === user.username) {
+                showToast('You cannot subscribe to yourself.');
+                return;
+            }
+
+            showToast('Subscribe system next step mein connect karenge.');
+        });
+    });
+}
+
+function setupActions() {
+
+    document.querySelectorAll('.like-btn').forEach(button => {
+
+        button.addEventListener('click', async event => {
+
+            event.stopPropagation();
+
+            const id = button.dataset.id;
+            const user = getCurrentUser();
+
+            if (!user?.username) {
+                showToast('Please login first.');
+                return;
+            }
+
+            button.disabled = true;
+
+            try {
+
+                const response = await fetch(`/api/videos/${encodeURIComponent(id)}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: user.username
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Like failed');
+                }
+
+                const count = button
+                    .closest('.action-wrap')
+                    .querySelector('.like-count');
+
+                if (count) {
+                    count.textContent = result.likes || 0;
+                }
+
+                button.textContent = result.liked ? '❤️' : '🤍';
+                button.classList.toggle('liked', result.liked);
+
+            } catch (error) {
+
+                console.error('Short like error:', error);
+                showToast(error.message || 'Like failed');
+
+            } finally {
+
+                button.disabled = false;
+
+            }
+        });
+    });
+
+    document.querySelectorAll('.comment-btn').forEach(button => {
+
+        button.addEventListener('click', event => {
+
+            event.stopPropagation();
+
+            const id = button.dataset.id;
+            const box = document.getElementById(`comments-${id}`);
+
+            if (box) {
+                box.classList.toggle('show');
+            }
+        });
+    });
+
+    document.querySelectorAll('.comment-send').forEach(button => {
+
+        button.addEventListener('click', async event => {
+
+            event.stopPropagation();
+
+            const id = button.dataset.id;
+            const box = document.getElementById(`comments-${id}`);
+            const input = box?.querySelector('.comment-input');
+
+            const comment = input?.value.trim();
+            const user = getCurrentUser();
+
+            if (!user?.username) {
+                showToast('Please login first.');
+                return;
+            }
+
+            if (!comment) {
+                showToast('Write a comment first.');
+                return;
+            }
+
+            button.disabled = true;
+
+            try {
+
+                const response = await fetch(`/api/videos/${encodeURIComponent(id)}/comment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: user.username,
+                        comment: comment
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Comment failed');
+                }
+
+                input.value = '';
+
+                const list = box.querySelector('.comment-list');
+
+                if (list) {
+
+                    const empty = list.querySelector('.comment-item');
+
+                    if (empty && empty.textContent.includes('No comments yet')) {
+                        empty.remove();
+                    }
+
+                    const item = document.createElement('div');
+                    item.className = 'comment-item';
+                    item.textContent = result.comment?.text || comment;
+
+                    list.appendChild(item);
+                }
+
+                showToast('Comment added ❤️');
+
+            } catch (error) {
+
+                console.error('Short comment error:', error);
+                showToast(error.message || 'Comment failed');
+
+            } finally {
+
+                button.disabled = false;
+
+            }
+        });
+    });
+
+    document.querySelectorAll('.share-btn').forEach(button => {
+
+        button.addEventListener('click', async event => {
+
+            event.stopPropagation();
+
+            const id = button.dataset.id;
+            const shareUrl =
+                `${window.location.origin}/shorts.html?video=${encodeURIComponent(id)}`;
+
+            try {
+
+                if (navigator.share) {
+
+                    await navigator.share({
+                        title: 'Watch this Short on UdaanTV',
+                        text: 'Check out this Short on UdaanTV!',
+                        url: shareUrl
+                    });
+
+                } else if (navigator.clipboard) {
+
+                    await navigator.clipboard.writeText(shareUrl);
+                    showToast('Link copied 🔗');
+
+                } else {
+
+                    showToast(shareUrl);
+
+                }
+
+            } catch (error) {
+
+                if (error.name !== 'AbortError') {
+                    console.error('Share error:', error);
+                    showToast('Unable to share');
+                }
+
+            }
+        });
+    });
+}
+
+loadShorts();
+</script>
+
+</body>
+</html>

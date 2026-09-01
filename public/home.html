@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f28c00">
     <title>UDAAN - Home</title>
     <link rel="stylesheet" href="home.css">
 </head>
@@ -10,39 +11,77 @@
 <body>
 
 <header class="topbar">
-    <div class="brand">UDAAN</div>
+
+    <div class="brand">
+        <span class="brand-mark">U</span>
+        <span>UDAAN</span>
+    </div>
 
     <div class="search">
-        <input id="searchInput" type="text" placeholder="Search creators, videos...">
-        <button id="searchBtn">🔍</button>
+        <input
+            id="searchInput"
+            type="text"
+            autocomplete="off"
+            placeholder="Search videos, creators..."
+        >
+        <button id="searchBtn" type="button">⌕</button>
+        <div id="creatorSuggestions" class="creator-suggestions"></div>
     </div>
 
     <div class="top-actions">
-        <button id="notificationBtn">🔔</button>
-<div id="notificationPanel" class="notification-panel">
-    <div class="notification-header">
-        <div>
-            <strong>Notifications</strong>
-            <small id="notificationUnreadText">No new notifications</small>
+
+        <button
+            id="notificationBtn"
+            class="icon-btn"
+            type="button"
+            aria-label="Notifications"
+        >🔔</button>
+
+        <div id="notificationPanel" class="notification-panel">
+
+            <div class="notification-header">
+
+                <div>
+                    <strong>Notifications</strong>
+                    <small id="notificationUnreadText">
+                        No new notifications
+                    </small>
+                </div>
+
+                <div class="notification-header-actions">
+                    <button
+                        id="markAllNotificationsRead"
+                        type="button"
+                    >Mark all read</button>
+
+                    <button
+                        id="closeNotifications"
+                        type="button"
+                    >✕</button>
+                </div>
+
+            </div>
+
+            <div id="notificationList">
+                <p>No notifications yet.</p>
+            </div>
+
         </div>
 
-        <div class="notification-header-actions">
-            <button id="markAllNotificationsRead" type="button">
-                Mark all read
-            </button>
-            <button id="closeNotifications" type="button">✕</button>
-        </div>
+        <button
+            id="profileBtn"
+            class="profile-top-btn"
+            type="button"
+            aria-label="Profile"
+        >👤</button>
+
     </div>
 
-    <div id="notificationList">
-        <p>No notifications yet.</p>
-    </div>
-</div>
-        <button id="profileBtn">👤</button>
-    </div>
 </header>
 
+
 <nav class="categories">
+
     <button class="active">All</button>
     <button>Trending</button>
     <button>Music</button>
@@ -51,145 +90,226 @@
     <button>Technology</button>
     <button>Comedy</button>
     <button>Vlogs</button>
+
 </nav>
+
 
 <main>
 
-<section class="welcome">
-    <div>
-        <h1>Welcome to UDAAN 🚀</h1>
-        <p>Discover creators. Watch. Support. Grow together.</p>
-    </div>
-</section>
+    <section class="welcome">
 
-<section>
-    <div class="section-title">
-        <h2>🔥 Trending</h2>
-        <span>See all</span>
-    </div>
+        <div class="welcome-content">
 
-    <div class="videos">
+            <span class="welcome-label">
+                UDAAN • CREATOR PLATFORM
+            </span>
 
-        <article class="video">
-            <div class="thumbnail">▶️</div>
-            <div class="video-info">
-                <div class="avatar">A</div>
-                <div>
-                    <h3>Welcome to UDAAN</h3>
-                    <p>UDAAN Official</p>
-                    <small>125K views • 2 hours ago</small>
-                </div>
-            </div>
-        </article>
+            <h1>
+                Welcome to <span>UDAAN</span> 🚀
+            </h1>
 
-        <article class="video">
-            <div class="thumbnail">🎬</div>
-            <div class="video-info">
-                <div class="avatar">C</div>
-                <div>
-                    <h3>My First Video on UDAAN</h3>
-                    <p>Creator World</p>
-                    <small>48K views • 5 hours ago</small>
-                </div>
-            </div>
-        </article>
+            <p>
+                Discover creators. Watch. Support. Grow together.
+            </p>
 
-    </div>
-</section>
-
-<section>
-    <div class="section-title">
-        <h2>🌟 Rising Creators</h2>
-        <span>Discover</span>
-    </div>
-
-    <div class="creators">
-
-        <div class="creator">
-            <div class="creator-avatar">R</div>
-            <h3>Rahul Vlogs</h3>
-            <p>1.2K subscribers</p>
-            <button>View Channel</button>
         </div>
 
-        <div class="creator">
-            <div class="creator-avatar">S</div>
-            <h3>Smart Study</h3>
-            <p>850 subscribers</p>
-            <button>View Channel</button>
+        <div class="welcome-badge">
+            <strong>🚀</strong>
+            <span>Your journey starts here</span>
         </div>
 
-        <div class="creator">
-            <div class="creator-avatar">M</div>
-            <h3>Music Beats</h3>
-            <p>640 subscribers</p>
-            <button>View Channel</button>
+    </section>
+
+
+    <section class="content-section">
+
+        <div class="section-title">
+
+            <div>
+                <span class="section-kicker">DISCOVER</span>
+                <h2>🔥 Trending</h2>
+            </div>
+
+            <button type="button" class="see-all">
+                See all
+            </button>
+
         </div>
 
-    </div>
-</section>
+        <div class="videos">
 
-<section>
-    <div class="section-title">
-        <h2>🎬 Recommended for you</h2>
-    </div>
+            <article class="video">
 
-            <div class="thumbnail">🎮</div>
-            <div class="video-info">
-                <div class="avatar">G</div>
-                <div>
-                    <h3>Best Gaming Moments</h3>
-                    <p>Gaming Zone</p>
-                    <small>25K views • 1 day ago</small>
+                <div class="thumbnail">
+                    <div class="thumbnail-play">▶</div>
                 </div>
-            </div>
-        </article>
 
-        <article class="video">
-            <div class="thumbnail">📚</div>
-            <div class="video-info">
-                <div class="avatar">E</div>
-                <div>
-                    <h3>Learn Something New Today</h3>
-                    <p>Education Hub</p>
-                    <small>12K views • 1 day ago</small>
+                <div class="video-info">
+
+                    <div class="avatar">U</div>
+
+                    <div>
+                        <h3>Welcome to UDAAN</h3>
+                        <p>@udaanofficial</p>
+                        <small>125K views • 2 hours ago</small>
+                    </div>
+
                 </div>
-            </div>
-        </article>
 
-    </div>
-</section>
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <section class="shorts-section">
+
+        <div class="section-title">
+
+            <div>
+                <span class="section-kicker">QUICK WATCH</span>
+                <h2>🎬 Shorts</h2>
+            </div>
+
+            <a href="/shorts.html" class="see-all">
+                View all
+            </a>
+
+        </div>
+
+        <div class="shorts-row">
+
+            <a href="/shorts.html" class="short-card">
+                <div class="short-icon">🚀</div>
+                <strong>Creator Life</strong>
+            </a>
+
+            <a href="/shorts.html" class="short-card">
+                <div class="short-icon">🎵</div>
+                <strong>Music</strong>
+            </a>
+
+            <a href="/shorts.html" class="short-card">
+                <div class="short-icon">🎮</div>
+                <strong>Gaming</strong>
+            </a>
+
+            <a href="/shorts.html" class="short-card">
+                <div class="short-icon">😂</div>
+                <strong>Comedy</strong>
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <section class="content-section">
+
+        <div class="section-title">
+
+            <div>
+                <span class="section-kicker">FOR YOU</span>
+                <h2>⭐ Recommended for you</h2>
+            </div>
+
+        </div>
+
+        <div class="videos recommended-videos">
+
+        </div>
+
+    </section>
+
+
+    <section class="creator-section">
+
+        <div class="section-title">
+
+            <div>
+                <span class="section-kicker">COMMUNITY</span>
+                <h2>🌟 Rising Creators</h2>
+            </div>
+
+            <span class="see-all">Discover</span>
+
+        </div>
+
+        <div class="creators">
+
+            <div class="creator">
+                <div class="creator-avatar">R</div>
+                <h3>Rahul Vlogs</h3>
+                <p>1.2K subscribers</p>
+                <button type="button">View Channel</button>
+            </div>
+
+            <div class="creator">
+                <div class="creator-avatar">S</div>
+                <h3>Smart Study</h3>
+                <p>850 subscribers</p>
+                <button type="button">View Channel</button>
+            </div>
+
+            <div class="creator">
+                <div class="creator-avatar">M</div>
+                <h3>Music Beats</h3>
+                <p>640 subscribers</p>
+                <button type="button">View Channel</button>
+            </div>
+
+        </div>
+
+    </section>
 
 </main>
 
+
 <nav class="bottom-nav">
 
-    <button class="selected">
+    <button class="selected" type="button">
         <strong>⌂</strong>
         <span>Home</span>
     </button>
 
-    <button id="shortsBtn" onclick="window.location.href='/shorts.html'">
+    <button
+        id="shortsBtn"
+        type="button"
+        onclick="window.location.href='/shorts.html'"
+    >
         <strong>▶</strong>
         <span>Shorts</span>
     </button>
 
-    <button class="create" id="createBtn">
+    <button
+        class="create"
+        id="createBtn"
+        type="button"
+    >
         <strong>＋</strong>
         <span>Create</span>
     </button>
 
-    <button id="followingBtn">
+    <button
+        id="followingBtn"
+        type="button"
+    >
         <strong>▣</strong>
         <span>Following</span>
     </button>
 
-    <button id="bottomProfile">
+    <button
+        id="bottomProfile"
+        type="button"
+    >
         <strong>👤</strong>
         <span>Profile</span>
     </button>
 
 </nav>
+
 
 <script src="home.js"></script>
 

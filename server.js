@@ -1,8 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
+const { requireAuth } = require('./middleware/auth');
 const multer = require('multer');
 const { signup, login } = require('./auth');
+const {
+    getNotifications,
+    saveNotifications
+} = require('./notificationsStore');
 
 const app = express();
 const PORT = 3000;
@@ -104,6 +109,13 @@ app.post('/api/login', async (req, res) => {
 });
 
 
+app.get('/api/me', requireAuth, (req, res) => {
+    res.json({
+        success: true,
+        user: req.user
+    });
+});
+
 app.get('/api/users', (req, res) => {
     try {
         if (!fs.existsSync('./users.json')) {
@@ -146,16 +158,7 @@ app.post('/api/notifications/:username/:id/read', (req, res) => {
             });
         }
 
-        if (!fs.existsSync(file)) {
-            return res.status(404).json({
-                success: false,
-                message: 'Notification not found'
-            });
-        }
-
-        const notifications = JSON.parse(
-            fs.readFileSync(file, 'utf8')
-        );
+        const notifications = getNotifications();
 
         const notification = notifications.find(
             n =>
@@ -172,10 +175,7 @@ app.post('/api/notifications/:username/:id/read', (req, res) => {
 
         notification.read = true;
 
-        fs.writeFileSync(
-            file,
-            JSON.stringify(notifications, null, 2)
-        );
+        saveNotifications(notifications);
 
         res.json({
             success: true,
@@ -197,13 +197,7 @@ app.get('/api/notifications/:username', (req, res) => {
         const username = String(req.params.username || '').trim();
         const file = './notifications.json';
 
-        if (!fs.existsSync(file)) {
-            return res.json([]);
-        }
-
-        const notifications = JSON.parse(
-            fs.readFileSync(file, 'utf8')
-        );
+        const notifications = getNotifications();
 
         const result = notifications
             .filter(n => n.recipient === username)
@@ -291,6 +285,93 @@ app.get('/api/profile/:username', (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Profile loading failed'
+        });
+    }
+});
+
+
+// GET FOLLOWING LIST
+app.get('/api/following/:username', (req, res) => {
+    try {
+        const fs = require('fs');
+
+        const username = String(req.params.username || '').trim();
+        const subscriptionsFile = './subscriptions.json';
+        const usersFile = './users.json';
+
+        if (!username) {
+            return res.status(400).json({
+                success: false,
+                message: 'Username required'
+            });
+        }
+
+        const subscriptions = fs.existsSync(subscriptionsFile)
+            ? JSON.parse(fs.readFileSync(subscriptionsFile, 'utf8'))
+            : [];
+
+        const users = fs.existsSync(usersFile)
+            ? JSON.parse(fs.readFileSync(usersFile, 'utf8'))
+            : [];
+
+        const following = subscriptions
+            .filter(s => s.subscriber === username)
+            .map(s => {
+                const creator = users.find(
+                    u => u.username === s.creator
+                );
+
+                return {
+                    username: s.creator,
+                    name: creator?.name || s.creator,
+                    avatar: creator?.avatar || null,
+                    profile_photo: creator?.profile_photo || null,
+                    subscribers: creator?.subscribers || 0
+                };
+            });
+
+        res.json({
+            success: true,
+            following
+        });
+
+    } catch (error) {
+        console.error('Following list error:', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Following list failed'
+        });
+    }
+});
+
+// GET FOLLOWING COUNT
+app.get('/api/following/:username/count', (req, res) => {
+    try {
+        const fs = require('fs');
+
+        const username = String(req.params.username || '').trim();
+        const subscriptionsFile = './subscriptions.json';
+
+        const subscriptions = fs.existsSync(subscriptionsFile)
+            ? JSON.parse(fs.readFileSync(subscriptionsFile, 'utf8'))
+            : [];
+
+        const count = subscriptions.filter(
+            s => s.subscriber === username
+        ).length;
+
+        res.json({
+            success: true,
+            count
+        });
+
+    } catch (error) {
+        console.error('Following count error:', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Following count failed'
         });
     }
 });

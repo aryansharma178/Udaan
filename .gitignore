@@ -16,3 +16,22 @@ v.id
 .env
 .env.*
 backups/
+
+android/local.properties
+
+# Android generated files
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# Runtime logs
+*.log
+
+# Backup/temp source files
+*.backup
+*.before-*
+
+# Temporary backup files
+*.before-*
+*.backup-*

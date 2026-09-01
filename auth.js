@@ -5,14 +5,23 @@ const jwt = require('jsonwebtoken');
 const USERS_FILE = './users.json';
 const JWT_SECRET = 'UDAAN_SECRET_CHANGE_THIS_LATER';
 
+let usersCache = null;
+
 function getUsers() {
+    if (usersCache !== null) {
+        return usersCache;
+    }
+
     if (!fs.existsSync(USERS_FILE)) {
         fs.writeFileSync(USERS_FILE, '[]');
     }
-    return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+
+    usersCache = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    return usersCache;
 }
 
 function saveUsers(users) {
+    usersCache = users;
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 

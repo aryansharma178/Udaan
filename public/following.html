@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UDAAN - Following</title>
+    <link rel="stylesheet" href="following.css">
+</head>
+
+<body>
+
+<header class="topbar">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h2>Following</h2>
+</header>
+
+<main>
+
+    <section>
+        <div class="section-title">
+            <h2>👥 Creators You Follow</h2>
+        </div>
+
+        <div id="creatorList" class="creator-list">
+            <p class="loading">Loading...</p>
+        </div>
+    </section>
+
+    <section>
+        <div class="section-title">
+            <h2>🎬 Latest Videos</h2>
+        </div>
+
+        <div id="videoList" class="video-list">
+            <p class="loading">Loading...</p>
+        </div>
+    </section>
+
+</main>
+
+<script>
+const creatorList = document.getElementById('creatorList');
+const videoList = document.getElementById('videoList');
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+async function loadFollowing() {
+    const savedUser = localStorage.getItem('udaan_user');
+
+    if (!savedUser) {
+        creatorList.innerHTML = '<div class="empty">Please login first.</div>';
+        videoList.innerHTML = '';
+        return;
+    }
+
+    try {
+        const user = JSON.parse(savedUser);
+
+        if (!user.username) {
+            throw new Error('Username not found');
+        }
+
+        const response = await fetch(
+            '/api/following/' + encodeURIComponent(user.username)
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Following feed failed');
+        }
+
+        const creators = result.creators || [];
+        const videos = result.videos || [];
+
+        if (!creators.length) {
+            creatorList.innerHTML = `
+                <div class="empty">
+                    <h3>👥 No followed creators yet</h3>
+                    <p>Subscribe to creators and they will appear here.</p>
+                </div>
+            `;
+        } else {
+            creatorList.innerHTML = creators.map(creator => {
+                const avatar = creator.profile_photo
+                    ? `<img src="${escapeHtml(creator.profile_photo)}" alt="">`
+                    : `<div class="avatar">${escapeHtml(
+                        creator.avatar ||
+                        (creator.name || creator.username || 'U').charAt(0).toUpperCase()
+                    )}</div>`;
+
+                return `
+                    <div class="creator-card"
+                         data-username="${escapeHtml(creator.username)}">
+                        ${avatar}
+                        <div class="creator-info">
+                            <strong>${escapeHtml(creator.name || creator.username)}</strong>
+                            <span>@${escapeHtml(creator.username)}</span>
+                            <small>${creator.subscribers || 0} subscribers</small>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            creatorList.querySelectorAll('.creator-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    window.location.href =
+                        '/profile.html?username=' +
+                        encodeURIComponent(card.dataset.username);
+                });
+            });
+        }
+
+        if (!videos.length) {
+            videoList.innerHTML = `
+                <div class="empty">
+                    <h3>🎬 No videos yet</h3>
+                    <p>Your followed creators haven't uploaded anything yet.</p>
+                </div>
+            `;
+            return;
+        }
+
+        videoList.innerHTML = videos.map(video => `
+            <article class="video-card">
+                <video
+                    controls
+                    preload="metadata"
+                    src="${escapeHtml(
+                        video.qualities?.original ||
+                        '/uploads/' + encodeURIComponent(video.filename)
+                    )}">
+                </video>
+
+                <div class="video-info">
+                    <h3>${escapeHtml(video.title || 'Untitled Video')}</h3>
+                    <p>${escapeHtml(video.description || '')}</p>
+                    <small>
+                        @${escapeHtml(video.username || 'creator')}
+                        • ${video.views || 0} views
+                        • ❤️ ${video.likes || 0}
+                    </small>
+                </div>
+            </article>
+        `).join('');
+
+    } catch (error) {
+        console.error('Following feed error:', error);
+
+        creatorList.innerHTML = `
+            <div class="empty">
+                <h3>⚠️ Unable to load Following</h3>
+                <p>Please try again.</p>
+            </div>
+        `;
+
+        videoList.innerHTML = '';
+    }
+}
+
+loadFollowing();
+</script>
+
+</body>
+</html>

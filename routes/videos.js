@@ -6,7 +6,49 @@ const { execFile } = require('child_process');
 
 const router = express.Router();
 
+const {
+    addNotification
+} = require('../notificationsStore');
+
 const uploadDir = path.join(__dirname, '../uploads');
+
+// FAST VIDEO DATA CACHE
+let videosCache = null;
+
+function getVideos() {
+    if (videosCache !== null) {
+        return videosCache;
+    }
+
+    const dataFile = path.join(__dirname, '../videos.json');
+
+    if (!fs.existsSync(dataFile)) {
+        videosCache = [];
+        return videosCache;
+    }
+
+    try {
+        videosCache = JSON.parse(
+            fs.readFileSync(dataFile, 'utf8')
+        );
+    } catch (error) {
+        console.error('videos.json cache read error:', error);
+        videosCache = [];
+    }
+
+    return videosCache;
+}
+
+function saveVideos(videos) {
+    videosCache = videos;
+    const dataFile = path.join(__dirname, '../videos.json');
+
+    fs.writeFileSync(
+        dataFile,
+        JSON.stringify(videos, null, 2)
+    );
+}
+
 
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -90,6 +132,7 @@ router.post('/upload', upload.single('video'), async (req, res) => {
             title: req.body.title || '',
             description: req.body.description || '',
             category: req.body.category || '',
+            isShort: String(req.body.isShort || 'false') === 'true',
             filename: req.file.filename,
             originalName: req.file.originalname,
             size: req.file.size,
@@ -149,10 +192,7 @@ router.post('/upload', upload.single('video'), async (req, res) => {
 
         videos.push(video);
 
-        fs.writeFileSync(
-            dataFile,
-            JSON.stringify(videos, null, 2)
-        );
+        saveVideos(videos);
 
         console.log(
             'Video saved with qualities:',
@@ -197,9 +237,7 @@ router.post('/:id/view', (req, res) => {
             });
         }
 
-        const videos = JSON.parse(
-            fs.readFileSync(dataFile, 'utf8')
-        );
+        const videos = getVideos();
 
         const video = videos.find(v => v.id === req.params.id);
 
@@ -212,10 +250,7 @@ router.post('/:id/view', (req, res) => {
 
         video.views = (video.views || 0) + 1;
 
-        fs.writeFileSync(
-            dataFile,
-            JSON.stringify(videos, null, 2)
-        );
+        saveVideos(videos);
 
         res.json({
             success: true,
@@ -245,9 +280,7 @@ router.post('/:id/watch', (req, res) => {
             });
         }
 
-        const videos = JSON.parse(
-            fs.readFileSync(dataFile, 'utf8')
-        );
+        const videos = getVideos();
 
         const video = videos.find(
             v => v.id === req.params.id
@@ -354,18 +387,7 @@ router.post('/:id/watch', (req, res) => {
 
 router.post('/:id/like', (req, res) => {
     try {
-        const dataFile = path.join(__dirname, '../videos.json');
-
-        if (!fs.existsSync(dataFile)) {
-            return res.status(404).json({
-                success: false,
-                message: 'Video not found'
-            });
-        }
-
-        const videos = JSON.parse(
-            fs.readFileSync(dataFile, 'utf8')
-        );
+        const videos = getVideos();
 
         const video = videos.find(v => v.id === req.params.id);
 
@@ -376,59 +398,61 @@ router.post('/:id/like', (req, res) => {
             });
         }
 
-        video.likes = (video.likes || 0) + 1;
+        const username = String(req.body.username || '').trim();
 
-        fs.writeFileSync(
-            dataFile,
-            JSON.stringify(videos, null, 2)
+        if (!username) {
+            return res.status(400).json({
+                success: false,
+                message: 'Username is required'
+            });
+        }
+
+        if (!Array.isArray(video.likedBy)) {
+            video.likedBy = [];
+        }
+
+        const existingIndex = video.likedBy.findIndex(
+            user => String(user) === username
         );
 
-        // LIKE NOTIFICATION
-        const liker = String(req.body.username || '').trim();
-        const creator = String(video.username || '').trim();
+        let liked;
 
-        if (liker && creator && liker !== creator) {
-            const notificationsFile = path.join(
-                __dirname,
-                '../notifications.json'
-            );
+        if (existingIndex === -1) {
+            video.likedBy.push(username);
+            liked = true;
 
-            let notifications = [];
+            const creator = String(video.username || '').trim();
 
-            if (fs.existsSync(notificationsFile)) {
-                try {
-                    notifications = JSON.parse(
-                        fs.readFileSync(notificationsFile, 'utf8')
-                    );
-                } catch {
-                    notifications = [];
-                }
+            if (creator && creator !== username) {
+                addNotification({
+                    id: Date.now(),
+                    recipient: creator,
+                    type: 'like',
+                    from: username,
+                    videoId: video.id,
+                    message: `${username} liked your video`,
+                    read: false,
+                    created_at: new Date().toISOString()
+                });
             }
 
-            notifications.push({
-                id: Date.now(),
-                recipient: creator,
-                type: 'like',
-                from: liker,
-                videoId: video.id,
-                message: `${liker} liked your video`,
-                read: false,
-                created_at: new Date().toISOString()
-            });
-
-            fs.writeFileSync(
-                notificationsFile,
-                JSON.stringify(notifications, null, 2)
-            );
+        } else {
+            video.likedBy.splice(existingIndex, 1);
+            liked = false;
         }
+
+        video.likes = video.likedBy.length;
+
+        saveVideos(videos);
 
         res.json({
             success: true,
+            liked,
             likes: video.likes
         });
 
     } catch (error) {
-        console.error(error);
+        console.error('Like toggle error:', error);
 
         res.status(500).json({
             success: false,
@@ -448,9 +472,7 @@ router.post('/:id/comment', (req, res) => {
             });
         }
 
-        const videos = JSON.parse(
-            fs.readFileSync(dataFile, 'utf8')
-        );
+        const videos = getVideos();
 
         const video = videos.find(v => v.id === req.params.id);
 
@@ -483,33 +505,13 @@ router.post('/:id/comment', (req, res) => {
 
         video.comments.push(newComment);
 
-        fs.writeFileSync(
-            dataFile,
-            JSON.stringify(videos, null, 2)
-        );
+        saveVideos(videos);
 
         // COMMENT NOTIFICATION
         const creator = String(video.username || '').trim();
 
         if (commenter && creator && commenter !== creator) {
-            const notificationsFile = path.join(
-                __dirname,
-                '../notifications.json'
-            );
-
-            let notifications = [];
-
-            if (fs.existsSync(notificationsFile)) {
-                try {
-                    notifications = JSON.parse(
-                        fs.readFileSync(notificationsFile, 'utf8')
-                    );
-                } catch {
-                    notifications = [];
-                }
-            }
-
-            notifications.push({
+            addNotification({
                 id: Date.now(),
                 recipient: creator,
                 type: 'comment',
@@ -519,11 +521,6 @@ router.post('/:id/comment', (req, res) => {
                 read: false,
                 created_at: new Date().toISOString()
             });
-
-            fs.writeFileSync(
-                notificationsFile,
-                JSON.stringify(notifications, null, 2)
-            );
         }
 
         res.json({
@@ -543,18 +540,16 @@ router.post('/:id/comment', (req, res) => {
 });
 
 router.get('/', (req, res) => {
-
-    const dataFile = path.join(__dirname, '../videos.json');
-
-    if (!fs.existsSync(dataFile)) {
-        return res.json([]);
+    try {
+        const videos = getVideos();
+        res.json(videos);
+    } catch (error) {
+        console.error('Videos API error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Unable to load videos'
+        });
     }
-
-    const videos = JSON.parse(
-        fs.readFileSync(dataFile, 'utf8')
-    );
-
-    res.json(videos);
 });
 
 module.exports = router;

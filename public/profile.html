@@ -18,9 +18,16 @@
 
     <section class="profile-card">
 
-        <div class="avatar-wrap">
+        <div class="avatar-wrap profile-photo-wrap">
             <img id="profilePhoto" class="profile-photo" alt="Profile Photo">
             <div class="avatar" id="avatar">A</div>
+
+            <button type="button" id="photoMenuBtn" class="photo-menu-btn" aria-label="Profile photo options">📷</button>
+
+            <div id="photoMenu" class="photo-menu">
+                <button type="button" id="changePhotoBtn" class="change-photo-btn">📸 Change Photo</button>
+                <button type="button" id="removePhotoBtn" class="remove-photo-btn">🗑️ Remove Photo</button>
+            </div>
         </div>
 
         <input
@@ -29,14 +36,6 @@
             accept="image/jpeg,image/png,image/webp"
             hidden
         >
-
-        <button id="changePhotoBtn" class="change-photo-btn">
-            📸 Change Photo
-        </button>
-
-        <button id="removePhotoBtn" class="remove-photo-btn">
-            🗑️ Remove Photo
-        </button>
 
         <button id="avatarBtn" class="avatar-btn">
             🎨 Choose Avatar
@@ -68,7 +67,7 @@
             Subscribe
         </button>
 
-        <button id="logoutBtn" class="logout-btn">
+        <button id="logoutBtn" class="logout-btn" type="button" onclick="localStorage.removeItem('udaan_token'); localStorage.removeItem('udaan_user'); window.location.href='/index.html';">
             Logout
         </button>
 
@@ -140,9 +139,26 @@
 </main>
 
 <script>
+const photoMenuBtn = document.getElementById("photoMenuBtn");
+const photoMenu = document.getElementById("photoMenu");
+
+photoMenuBtn?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    photoMenu?.classList.toggle("show");
+});
+
+photoMenu?.addEventListener("click", (event) => {
+    event.stopPropagation();
+});
+
+document.addEventListener("click", () => {
+    photoMenu?.classList.remove("show");
+});
+
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    localStorage.removeItem("udaan_token");
     localStorage.removeItem("udaan_user");
-    window.location.href = "/login.html";
+    window.location.href = "/index.html";
 });
 
 
@@ -466,7 +482,7 @@ avatarBtn?.addEventListener("click", () => {
 });
 
 avatarOptions.forEach(option => {
-    option.addEventListener("click", () => {
+    option.addEventListener("click", async () => {
 
         const selectedAvatar = option.dataset.avatar;
 
