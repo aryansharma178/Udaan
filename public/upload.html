@@ -107,18 +107,11 @@ uploadBtn.addEventListener('click', async () => {
     formData.append("category", category);
       formData.append("isShort", videoType === "short" ? "true" : "false");
 
-    const savedUser = localStorage.getItem("udaan_user");
+    const token = localStorage.getItem("udaan_token");
 
-    if (savedUser) {
-        try {
-            const user = JSON.parse(savedUser);
-
-            if (user.username) {
-                formData.append("username", user.username);
-            }
-        } catch (error) {
-            console.error("User data error:", error);
-        }
+    if (!token) {
+        message.textContent = "Please login again before uploading.";
+        return;
     }
 
     uploadBtn.disabled = true;
@@ -129,6 +122,9 @@ uploadBtn.addEventListener('click', async () => {
 
         const response = await fetch("/api/videos/upload", {
             method: "POST",
+            headers: {
+                "Authorization": "Bearer " + token
+            },
             body: formData
         });
 

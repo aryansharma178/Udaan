@@ -9,6 +9,7 @@ const router = express.Router();
 const {
     addNotification
 } = require('../notificationsStore');
+const { requireAuth } = require('../middleware/auth');
 
 const uploadDir = path.join(__dirname, '../uploads');
 
@@ -114,7 +115,7 @@ const upload = multer({
     }
 });
 
-router.post('/upload', upload.single('video'), async (req, res) => {
+router.post('/upload', requireAuth, upload.single('video'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
@@ -128,7 +129,7 @@ router.post('/upload', upload.single('video'), async (req, res) => {
 
         const video = {
             id: videoId,
-            username: req.body.username || 'unknown',
+            username: req.user.username,
             title: req.body.title || '',
             description: req.body.description || '',
             category: req.body.category || '',
