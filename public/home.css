@@ -1040,3 +1040,85 @@ main {
         font-size: 19px;
     }
 }
+
+/* UDAAN CUSTOM VIDEO PLAYER */
+.video-player-wrap {
+    position: relative;
+    background: #000;
+}
+
+.video-player-wrap .video-player {
+    width: 100%;
+    display: block;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+    background: #000;
+}
+
+.udaan-player-controls {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 8px 10px;
+    background: linear-gradient(transparent, rgba(0,0,0,.85));
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    z-index: 5;
+}
+
+.udaan-player-controls button {
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 18px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.udaan-progress {
+    flex: 1;
+    accent-color: #ff7a00;
+}
+
+.udaan-player-settings {
+    position: absolute;
+    right: 10px;
+    bottom: 48px;
+    min-width: 180px;
+    background: rgba(20,20,20,.96);
+    border-radius: 12px;
+    padding: 8px;
+    z-index: 10;
+    display: none;
+}
+
+.udaan-player-settings.show {
+    display: block;
+}
+
+.udaan-player-settings button {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    padding: 10px;
+    text-align: left;
+    border-radius: 8px;
+}
+
+.udaan-player-settings button:hover {
+    background: rgba(255,255,255,.12);
+}
+
+.udaan-player-time {
+    color: #fff;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.udaan-zoomed {
+    transform: scale(1.35);
+    transition: transform .2s ease;
+}

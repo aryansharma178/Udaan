@@ -134,6 +134,181 @@ async function loadVideos() {
 
             videosContainer.appendChild(article);
 
+
+            /* =========================================
+               UDAAN CUSTOM HOME VIDEO CONTROLS
+               Volume button intentionally omitted.
+            ========================================= */
+            const playerWrap = article.querySelector('.video-player-wrap');
+
+            if (playerWrap && player) {
+                player.controls = false;
+
+                const controls = document.createElement('div');
+                controls.className = 'udaan-player-controls';
+
+                controls.innerHTML = `
+                    <button class="udaan-play" title="Play/Pause">▶</button>
+                    <button class="udaan-back" title="10 seconds back">↶10</button>
+                    <button class="udaan-forward" title="10 seconds forward">10↷</button>
+                    <span class="udaan-player-time">0:00 / 0:00</span>
+                    <input class="udaan-progress" type="range" min="0" max="100" value="0">
+                    <button class="udaan-speed" title="Playback speed">1x</button>
+                    <button class="udaan-quality" title="Quality">⚙</button>
+                    <button class="udaan-zoom" title="Zoom">🔍</button>
+                    <button class="udaan-fullscreen" title="Fullscreen">⛶</button>
+                `;
+
+                playerWrap.appendChild(controls);
+
+                const playBtn = controls.querySelector('.udaan-play');
+                const backBtn = controls.querySelector('.udaan-back');
+                const forwardBtn = controls.querySelector('.udaan-forward');
+                const progressBar = controls.querySelector('.udaan-progress');
+                const timeLabel = controls.querySelector('.udaan-player-time');
+                const speedBtn = controls.querySelector('.udaan-speed');
+                const qualityBtn = controls.querySelector('.udaan-quality');
+                const zoomBtn = controls.querySelector('.udaan-zoom');
+                const fullscreenBtn = controls.querySelector('.udaan-fullscreen');
+
+                const formatPlayerTime = seconds => {
+                    if (!Number.isFinite(seconds)) return '0:00';
+                    const minutes = Math.floor(seconds / 60);
+                    const secs = Math.floor(seconds % 60);
+                    return `${minutes}:${String(secs).padStart(2, '0')}`;
+                };
+
+                playBtn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    if (player.paused) {
+                        player.play().catch(() => {});
+                    } else {
+                        player.pause();
+                    }
+                });
+
+                player.addEventListener('play', () => {
+                    playBtn.textContent = '❚❚';
+                });
+
+                player.addEventListener('pause', () => {
+                    playBtn.textContent = '▶';
+                });
+
+                backBtn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    player.currentTime = Math.max(0, player.currentTime - 10);
+                });
+
+                forwardBtn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    if (Number.isFinite(player.duration)) {
+                        player.currentTime =
+                            Math.min(player.duration, player.currentTime + 10);
+                    }
+                });
+
+                player.addEventListener('loadedmetadata', () => {
+                    timeLabel.textContent =
+                        `${formatPlayerTime(player.currentTime)} / ${formatPlayerTime(player.duration)}`;
+                });
+
+                player.addEventListener('timeupdate', () => {
+                    if (Number.isFinite(player.duration) && player.duration > 0) {
+                        progressBar.value =
+                            (player.currentTime / player.duration) * 100;
+                    }
+
+                    timeLabel.textContent =
+                        `${formatPlayerTime(player.currentTime)} / ${formatPlayerTime(player.duration)}`;
+                });
+
+                progressBar.addEventListener('input', e => {
+                    e.stopPropagation();
+
+                    if (Number.isFinite(player.duration)) {
+                        player.currentTime =
+                            (Number(progressBar.value) / 100) * player.duration;
+                    }
+                });
+
+                speedBtn.addEventListener('click', e => {
+                    e.stopPropagation();
+
+                    const speeds = [1, 1.25, 1.5, 1.75, 2, 0.75, 0.5];
+                    const currentIndex = speeds.indexOf(player.playbackRate);
+                    const nextSpeed =
+                        speeds[(currentIndex + 1) % speeds.length];
+
+                    player.playbackRate = nextSpeed;
+                    speedBtn.textContent = `${nextSpeed}x`;
+                });
+
+                qualityBtn.addEventListener('click', e => {
+                    e.stopPropagation();
+
+                    const qualities = video.qualities || {};
+                    const available = Object.keys(qualities)
+                        .filter(q => qualities[q]);
+
+                    if (available.length <= 1) {
+                        alert('Quality options will be available after video processing.');
+                        return;
+                    }
+
+                    const choice = prompt(
+                        'Select quality:\\n\\n' +
+                        available.join('\\n')
+                    );
+
+                    if (!choice || !qualities[choice]) return;
+
+                    const currentTime = player.currentTime;
+                    const wasPlaying = !player.paused;
+
+                    player.src = qualities[choice];
+                    player.load();
+
+                    player.addEventListener('loadedmetadata', () => {
+                        player.currentTime =
+                            Math.min(currentTime, player.duration || currentTime);
+
+                        if (wasPlaying) {
+                            player.play().catch(() => {});
+                        }
+                    }, { once: true });
+                });
+
+                zoomBtn.addEventListener('click', e => {
+                    e.stopPropagation();
+
+                    player.classList.toggle('udaan-zoomed');
+
+                    zoomBtn.textContent =
+                        player.classList.contains('udaan-zoomed')
+                            ? '🔎'
+                            : '🔍';
+                });
+
+                fullscreenBtn.addEventListener('click', async e => {
+                    e.stopPropagation();
+
+                    try {
+                        if (!document.fullscreenElement) {
+                            if (playerWrap.requestFullscreen) {
+                                await playerWrap.requestFullscreen();
+                            } else if (player.webkitEnterFullscreen) {
+                                player.webkitEnterFullscreen();
+                            }
+                        } else {
+                            await document.exitFullscreen();
+                        }
+                    } catch (error) {
+                        console.error('Fullscreen error:', error);
+                    }
+                });
+            }
+
             if (window.udaanVideoObserver) {
                 const lazyVideo = article.querySelector(".video-player");
                 if (lazyVideo) {
