@@ -6,6 +6,11 @@ import android.graphics.Color;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebChromeClient;
+import android.webkit.ValueCallback;
+import android.content.Intent;
+import android.net.Uri;
+import android.app.Activity;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.widget.TextView;
@@ -20,6 +25,7 @@ import java.util.concurrent.Executors;
 public class MainActivity extends Activity {
 
     private WebView webView;
+    private ValueCallback<Uri[]> filePathCallback;
     private TextView statusText;
 
     @Override
@@ -31,7 +37,7 @@ public class MainActivity extends Activity {
         layout.setBackgroundColor(Color.WHITE);
 
         statusText = new TextView(this);
-        statusText.setText("UDAAN: testing localhost...");
+        statusText.setText("UDAAN: connecting to UDAAN online...");
         statusText.setTextSize(17);
         statusText.setTextColor(Color.BLACK);
         statusText.setPadding(25, 25, 25, 25);
@@ -47,6 +53,34 @@ public class MainActivity extends Activity {
         settings.setMixedContentMode(
                 WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         );
+
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(
+                    WebView webView,
+                    ValueCallback<Uri[]> filePathCallback,
+                    FileChooserParams fileChooserParams) {
+
+                if (MainActivity.this.filePathCallback != null) {
+                    MainActivity.this.filePathCallback.onReceiveValue(null);
+                }
+
+                MainActivity.this.filePathCallback = filePathCallback;
+
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("video/*");
+
+                try {
+                    startActivityForResult(intent, 1001);
+                } catch (Exception e) {
+                    MainActivity.this.filePathCallback = null;
+                    filePathCallback.onReceiveValue(null);
+                }
+
+                return true;
+            }
+        });
 
         webView.setWebViewClient(new WebViewClient() {
 
@@ -120,7 +154,7 @@ public class MainActivity extends Activity {
             try {
                 URL url =
                         new URL(
-                                "http://127.0.0.1:3000/home.html"
+                                "https://udaan-ss5a.onrender.com/home.html"
                         );
 
                 HttpURLConnection connection =
@@ -154,7 +188,7 @@ public class MainActivity extends Activity {
                 statusText.setText(finalResult);
 
                 webView.loadUrl(
-                        "http://127.0.0.1:3000/home.html"
+                        "https://udaan-ss5a.onrender.com/home.html"
                 );
             });
         });
@@ -171,6 +205,27 @@ public class MainActivity extends Activity {
         } else {
 
             super.onBackPressed();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1001) {
+            if (filePathCallback == null) return;
+
+            Uri[] results = null;
+
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                Uri uri = data.getData();
+                if (uri != null) {
+                    results = new Uri[]{uri};
+                }
+            }
+
+            filePathCallback.onReceiveValue(results);
+            filePathCallback = null;
         }
     }
 }
