@@ -135,6 +135,8 @@ async function loadVideos() {
             videosContainer.appendChild(article);
 
 
+            const player = article.querySelector('.video-player');
+
             /* =========================================
                UDAAN CUSTOM HOME VIDEO CONTROLS
                Volume button intentionally omitted.
@@ -426,7 +428,6 @@ async function loadVideos() {
                 }
             });
 
-            const player = article.querySelector('.video-player');
             const qualitySelect = article.querySelector('.quality-select');
 
             if (qualitySelect && video.qualities) {
