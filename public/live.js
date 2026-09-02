@@ -57,7 +57,7 @@ async function loadUser() {
             }
         });
 
-        if (!response.ok) return;
+        if (!response.success) return;
 
         const data = await response.json();
 
@@ -256,7 +256,7 @@ async function createLive() {
         },
         async (response) => {
 
-            if (!response || !response.ok) {
+            if (!response || !response.success) {
                 showMessage(
                     response?.message ||
                     'Unable to create live room.',
@@ -326,7 +326,7 @@ async function joinLive(room) {
         },
         (response) => {
 
-            if (!response || !response.ok) {
+            if (!response || !response.success) {
                 addSystemMessage(
                     response?.message ||
                     'Live stream not found.'
