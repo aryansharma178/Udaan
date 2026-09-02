@@ -912,3 +912,332 @@ body > header h2{
   #name{font-size:30px!important}
   .avatar{width:135px!important;height:135px!important}
 }
+
+/* =========================================================
+   UDAAN PROFILE — DITTO PREMIUM GRADIENT UI
+   ========================================================= */
+
+body {
+    background:
+        radial-gradient(circle at 50% 0%, rgba(111,45,255,.25), transparent 32%),
+        linear-gradient(180deg,#05030f 0%,#0b0618 45%,#05030d 100%) !important;
+    color:#fff !important;
+}
+
+header {
+    background:rgba(5,3,15,.96) !important;
+    border-bottom:1px solid rgba(255,255,255,.06) !important;
+}
+
+header button {
+    width:64px !important;
+    height:60px !important;
+    border-radius:22px !important;
+    background:rgba(255,255,255,.06) !important;
+    border:1px solid rgba(255,255,255,.1) !important;
+    color:#fff !important;
+    font-size:30px !important;
+}
+
+/* Main profile */
+.profile-card {
+    margin:0 !important;
+    padding:28px 18px 30px !important;
+    border-radius:0 !important;
+    background:
+        radial-gradient(circle at 50% 12%,rgba(124,50,255,.38),transparent 30%),
+        linear-gradient(180deg,#17062f 0%,#100522 55%,#080411 100%) !important;
+    box-shadow:none !important;
+}
+
+/* Avatar */
+.profile-photo-wrap {
+    width:180px !important;
+    height:180px !important;
+    margin:10px auto 22px !important;
+    position:relative !important;
+}
+
+.profile-photo,
+.profile-photo-wrap .avatar {
+    width:180px !important;
+    height:180px !important;
+    border-radius:50% !important;
+}
+
+.profile-photo-wrap .avatar {
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    font-size:92px !important;
+    font-weight:300 !important;
+    color:#fff !important;
+    background:
+        linear-gradient(145deg,#9a4cff,#2858ed) !important;
+    border:9px solid rgba(143,76,255,.75) !important;
+    box-shadow:
+        0 0 0 10px rgba(117,48,255,.16),
+        0 0 45px rgba(113,45,255,.45) !important;
+}
+
+/* LINE CAMERA ICON */
+.photo-menu-btn {
+    position:absolute !important;
+    right:-4px !important;
+    bottom:8px !important;
+    width:66px !important;
+    height:66px !important;
+    border-radius:50% !important;
+    background:#090711 !important;
+    border:2px solid #fff !important;
+    color:#fff !important;
+    font-size:0 !important;
+    box-shadow:0 8px 25px rgba(0,0,0,.55) !important;
+}
+
+.photo-menu-btn::before {
+    content:"";
+    display:block;
+    width:27px;
+    height:19px;
+    border:3px solid #fff;
+    border-radius:5px;
+    position:absolute;
+    left:17px;
+    top:22px;
+}
+
+.photo-menu-btn::after {
+    content:"";
+    width:9px;
+    height:9px;
+    border:2px solid #fff;
+    border-radius:50%;
+    position:absolute;
+    left:25px;
+    top:27px;
+}
+
+/* small camera top */
+.profile-photo-wrap::after {
+    content:"♛";
+    position:absolute;
+    right:5px;
+    top:-4px;
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#ffd329;
+    color:#513600;
+    font-size:24px;
+    box-shadow:0 5px 20px rgba(255,210,30,.3);
+}
+
+/* Choose avatar */
+.avatar-btn {
+    width:100% !important;
+    max-width:540px !important;
+    height:68px !important;
+    margin:0 auto 28px !important;
+    display:block !important;
+    border-radius:34px !important;
+    background:rgba(255,255,255,.055) !important;
+    border:1px solid rgba(255,255,255,.16) !important;
+    color:#fff !important;
+    font-size:22px !important;
+    font-weight:600 !important;
+    box-shadow:inset 0 1px rgba(255,255,255,.08) !important;
+}
+
+/* Name */
+#name {
+    font-size:42px !important;
+    font-weight:800 !important;
+    text-align:center !important;
+    margin:0 !important;
+    color:#fff !important;
+}
+
+#username {
+    text-align:center !important;
+    font-size:22px !important;
+    color:#b9b4c8 !important;
+    margin:8px 0 24px !important;
+}
+
+/* Subscribe */
+.subscribe-btn {
+    width:100% !important;
+    height:70px !important;
+    border-radius:35px !important;
+    border:0 !important;
+    color:#fff !important;
+    font-size:23px !important;
+    font-weight:700 !important;
+    background:linear-gradient(100deg,#8b3dff,#e32eff) !important;
+    box-shadow:0 12px 35px rgba(154,45,255,.25) !important;
+}
+
+/* Existing buttons as premium profile strip */
+.logout-btn,
+.edit-profile-btn,
+.creator-studio-btn {
+    min-height:64px !important;
+    border-radius:32px !important;
+    background:rgba(255,255,255,.045) !important;
+    color:#fff !important;
+    border:1px solid rgba(255,255,255,.12) !important;
+    font-size:19px !important;
+    font-weight:600 !important;
+}
+
+/* LINE ICON for Creator Studio */
+.creator-studio-btn {
+    position:relative;
+}
+
+.creator-studio-btn {
+    font-size:0 !important;
+}
+
+.creator-studio-btn::before {
+    content:"";
+    display:inline-block;
+    width:20px;
+    height:20px;
+    border:2px solid #fff;
+    border-radius:5px;
+    margin-right:10px;
+    vertical-align:-4px;
+}
+
+.creator-studio-btn::after {
+    content:"Creator Studio";
+    font-size:19px;
+}
+
+/* Edit */
+.edit-profile-btn {
+    color:#fff !important;
+}
+
+/* Logout */
+.logout-btn {
+    color:#ff6683 !important;
+    border-color:rgba(255,70,110,.35) !important;
+}
+
+/* Stats */
+.stats {
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:16px !important;
+    margin-top:28px !important;
+}
+
+.stats > div {
+    min-height:120px !important;
+    border-radius:24px !important;
+    padding:22px !important;
+    background:rgba(255,255,255,.055) !important;
+    border:1px solid rgba(255,255,255,.08) !important;
+    box-shadow:inset 0 1px rgba(255,255,255,.04) !important;
+}
+
+.stats strong {
+    display:block !important;
+    font-size:31px !important;
+    color:#fff !important;
+}
+
+.stats span {
+    color:#bdb7ca !important;
+    font-size:16px !important;
+}
+
+/* Monetization */
+.final-monetization,
+.final-overview {
+    border-radius:28px !important;
+}
+
+.final-monetization {
+    background:
+        linear-gradient(110deg,rgba(116,39,255,.72),rgba(18,53,120,.82)) !important;
+    border:1px solid rgba(255,255,255,.08) !important;
+    box-shadow:0 15px 40px rgba(80,30,200,.18) !important;
+}
+
+/* Analytics button */
+.final-overview button,
+.view-analytics,
+#viewAnalyticsBtn {
+    border:2px solid #9d48ff !important;
+    background:transparent !important;
+    color:#b45cff !important;
+    border-radius:28px !important;
+}
+
+/* Bottom navigation */
+.final-bottom-nav {
+    background:rgba(17,16,31,.96) !important;
+    backdrop-filter:blur(20px) !important;
+    border:1px solid rgba(255,255,255,.1) !important;
+    box-shadow:0 -10px 40px rgba(0,0,0,.3) !important;
+}
+
+.final-bottom-nav button {
+    color:#aaa5b8 !important;
+}
+
+.final-bottom-nav button.active {
+    color:#b65cff !important;
+}
+
+/* Center PLUS */
+.final-bottom-nav .plus,
+.final-bottom-nav .nav-plus {
+    width:66px !important;
+    height:66px !important;
+    border-radius:50% !important;
+    border:3px solid #9d45ff !important;
+    background:#080611 !important;
+    color:#fff !important;
+    font-size:36px !important;
+    box-shadow:0 0 22px rgba(157,69,255,.35) !important;
+}
+
+/* Mobile */
+@media(max-width:600px) {
+    .profile-photo-wrap,
+    .profile-photo,
+    .profile-photo-wrap .avatar {
+        width:165px !important;
+        height:165px !important;
+    }
+
+    .profile-photo-wrap .avatar {
+        font-size:82px !important;
+    }
+
+    #name {
+        font-size:34px !important;
+    }
+
+    #username {
+        font-size:19px !important;
+    }
+
+    .stats {
+        gap:12px !important;
+    }
+
+    .stats > div {
+        min-height:105px !important;
+        padding:18px !important;
+    }
+}
+
