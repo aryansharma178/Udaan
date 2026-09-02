@@ -72,7 +72,8 @@ async function login(username, password) {
     const token = jwt.sign(
         {
             id: user.id,
-            username: user.username
+            username: user.username,
+            role: user.role || 'user'
         },
         JWT_SECRET,
         { expiresIn: '7d' }
@@ -83,7 +84,8 @@ async function login(username, password) {
         user: {
             id: user.id,
             name: user.name,
-            username: user.username
+            username: user.username,
+            role: user.role || 'user'
         }
     };
 }

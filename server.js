@@ -3,6 +3,7 @@ const path = require('path');
 const express = require('express');
 const { requireAuth } = require('./middleware/auth');
 const multer = require('multer');
+const { logError, readErrors } = require('./errorMonitor');
 const { signup, login } = require('./auth');
 const {
     getNotifications,
@@ -13,6 +14,35 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+
+/*
+ * UDAAN Error Monitoring
+ * Captures unexpected server errors without exposing secrets.
+ */
+app.use((req, res, next) => {
+    const originalSend = res.send;
+
+    res.send = function (body) {
+        if (res.statusCode >= 500 && !res.locals.errorLogged) {
+            res.locals.errorLogged = true;
+
+            logError({
+                type: 'http_5xx',
+                error: new Error(`HTTP ${res.statusCode}`),
+                req,
+                extra: {
+                    response: typeof body === 'string'
+                        ? body.slice(0, 1000)
+                        : body
+                }
+            });
+        }
+
+        return originalSend.call(this, body);
+    };
+
+    next();
+});
 app.use('/api/videos', require('./routes/videos'));
 app.use('/uploads', express.static('uploads'));
 app.use('/profile-uploads', express.static('profile-uploads'));
@@ -108,6 +138,56 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+
+
+/*
+ * Receive frontend/client errors
+ */
+app.post('/api/client-errors', (req, res) => {
+    try {
+        const {
+            type,
+            message,
+            stack,
+            page,
+            username,
+            created_at,
+            extra
+        } = req.body || {};
+
+        const safeError = new Error(
+            String(message || 'Unknown client error').slice(0, 2000)
+        );
+
+        if (stack) {
+            safeError.stack = String(stack).slice(0, 5000);
+        }
+
+        logError({
+            type: String(type || 'client_error').slice(0, 100),
+            error: safeError,
+            req,
+            extra: {
+                page: String(page || '').slice(0, 500),
+                username: String(username || '').slice(0, 100),
+                client_created_at: created_at || null,
+                details: extra || null
+            }
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Client error recorded'
+        });
+    } catch (error) {
+        console.error('Client error logging failed:', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Unable to record client error'
+        });
+    }
+});
 
 app.get('/api/me', requireAuth, (req, res) => {
     res.json({
@@ -932,6 +1012,56 @@ app.get('/api/profile/:username/subscription-status', (req, res) => {
             message: 'Subscription status failed'
         });
     }
+});
+
+/*
+ * Admin Error Monitoring API
+ * Protected with the existing JWT authentication.
+ */
+app.get('/api/admin/errors', requireAuth, (req, res) => {
+    try {
+        if (req.user?.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Admin access required'
+            });
+        }
+
+        const errors = readErrors();
+
+        res.json({
+            success: true,
+            count: errors.length,
+            errors: errors.slice(-100).reverse()
+        });
+    } catch (error) {
+        console.error('Admin errors API failed:', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Unable to load errors'
+        });
+    }
+});
+
+/*
+ * Final Express error handler
+ */
+app.use((error, req, res, next) => {
+    logError({
+        type: 'unhandled_server_error',
+        error,
+        req
+    });
+
+    if (res.headersSent) {
+        return next(error);
+    }
+
+    res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+    });
 });
 
 app.listen(PORT, '0.0.0.0', () => {

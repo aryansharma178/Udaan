@@ -78,3 +78,98 @@ form.addEventListener('submit', async (e) => {
         message.textContent = error.message;
     }
 });
+
+/* =========================================
+   UDAAN FRONTEND ERROR MONITORING
+   ========================================= */
+
+(function () {
+    const ERROR_ENDPOINT = '/api/client-errors';
+
+    function sendClientError(type, error, extra = {}) {
+        try {
+            const user = JSON.parse(
+                localStorage.getItem('udaan_user') || 'null'
+            );
+
+            const payload = {
+                type,
+                message: error?.message || String(error || 'Unknown client error'),
+                stack: error?.stack || null,
+                page: window.location.pathname,
+                username: user?.username || null,
+                created_at: new Date().toISOString(),
+                extra
+            };
+
+            fetch(ERROR_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload),
+                keepalive: true
+            }).catch(() => {});
+        } catch (_) {
+            // Monitoring must never break the application.
+        }
+    }
+
+    window.addEventListener('error', (event) => {
+        sendClientError(
+            'javascript_error',
+            event.error || new Error(event.message || 'Unknown JavaScript error'),
+            {
+                filename: event.filename || null,
+                line: event.lineno || null,
+                column: event.colno || null
+            }
+        );
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+        const reason = event.reason instanceof Error
+            ? event.reason
+            : new Error(String(event.reason || 'Unhandled promise rejection'));
+
+        sendClientError(
+            'unhandled_promise',
+            reason
+        );
+    });
+
+    const originalFetch = window.fetch;
+
+    window.fetch = async function (...args) {
+        try {
+            const response = await originalFetch.apply(this, args);
+
+            if (!response.ok) {
+                sendClientError(
+                    'api_error',
+                    new Error(`API request failed: HTTP ${response.status}`),
+                    {
+                        url: typeof args[0] === 'string'
+                            ? args[0]
+                            : args[0]?.url || null,
+                        status: response.status
+                    }
+                );
+            }
+
+            return response;
+        } catch (error) {
+            sendClientError(
+                'network_error',
+                error,
+                {
+                    url: typeof args[0] === 'string'
+                        ? args[0]
+                        : args[0]?.url || null
+                }
+            );
+
+            throw error;
+        }
+    };
+})();

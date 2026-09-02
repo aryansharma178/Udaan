@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UDAAN Admin - Error Monitor</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0f1115;
+            color: #fff;
+        }
+
+        header {
+            padding: 18px;
+            background: #181b22;
+            border-bottom: 1px solid #292d36;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .container {
+            padding: 16px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .count {
+            color: #bbb;
+        }
+
+        button {
+            border: 0;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            background: #ff7a00;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .error-card {
+            background: #181b22;
+            border: 1px solid #292d36;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .error-type {
+            font-weight: bold;
+            color: #ff8a3d;
+            margin-bottom: 8px;
+        }
+
+        .message {
+            font-size: 16px;
+            margin-bottom: 10px;
+            word-break: break-word;
+        }
+
+        .meta {
+            color: #aaa;
+            font-size: 13px;
+            line-height: 1.7;
+            word-break: break-word;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #ccc;
+            background: #101217;
+            padding: 10px;
+            border-radius: 7px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+
+        .empty {
+            text-align: center;
+            color: #aaa;
+            padding: 50px 10px;
+        }
+
+        .error {
+            color: #ff6b6b;
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🚨 UDAAN Error Monitor</h1>
+</header>
+
+<div class="container">
+
+    <div class="topbar">
+        <div class="count" id="count">Loading...</div>
+        <button onclick="loadErrors()">🔄 Refresh</button>
+    </div>
+
+    <div id="errors"></div>
+
+</div>
+
+<script>
+async function loadErrors() {
+    const container = document.getElementById('errors');
+    const count = document.getElementById('count');
+
+    container.innerHTML = '<div class="empty">Loading errors...</div>';
+
+    const token = localStorage.getItem('udaan_token');
+
+    if (!token) {
+        count.textContent = '';
+        container.innerHTML =
+            '<div class="error">Please login as admin first.</div>';
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/errors', {
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Unable to load errors');
+        }
+
+        count.textContent =
+            'Total recorded errors: ' + result.count;
+
+        if (!result.errors || result.errors.length === 0) {
+            container.innerHTML =
+                '<div class="empty">🎉 No errors recorded.</div>';
+            return;
+        }
+
+        container.innerHTML = result.errors.map(error => `
+            <div class="error-card">
+                <div class="error-type">
+                    ${escapeHtml(error.type || 'unknown')}
+                </div>
+
+                <div class="message">
+                    ${escapeHtml(error.message || 'Unknown error')}
+                </div>
+
+                <div class="meta">
+                    <strong>Time:</strong>
+                    ${escapeHtml(error.created_at || '-')}<br>
+
+                    <strong>User:</strong>
+                    ${escapeHtml(error.username || 'Guest')}<br>
+
+                    <strong>Method:</strong>
+                    ${escapeHtml(error.method || '-')}<br>
+
+                    <strong>Path:</strong>
+                    ${escapeHtml(error.path || error.extra?.page || '-')}<br>
+
+                    <strong>IP:</strong>
+                    ${escapeHtml(error.ip || '-')}
+                </div>
+
+                ${error.stack ? `
+                    <details>
+                        <summary>Stack trace</summary>
+                        <pre>${escapeHtml(error.stack)}</pre>
+                    </details>
+                ` : ''}
+            </div>
+        `).join('');
+
+    } catch (error) {
+        count.textContent = '';
+        container.innerHTML =
+            '<div class="error">' +
+            escapeHtml(error.message) +
+            '</div>';
+    }
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}
+
+loadErrors();
+</script>
+
+</body>
+</html>
