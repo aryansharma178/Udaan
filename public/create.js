@@ -564,9 +564,7 @@ effectsBtn?.addEventListener(
     "click",
     () => {
 
-        alert(
-            "Effects panel coming soon."
-        );
+        openCreatorTools("effects");
     }
 );
 
@@ -579,9 +577,7 @@ aiBtn?.addEventListener(
     "click",
     () => {
 
-        alert(
-            "UDAAN AI tools coming soon."
-        );
+        openCreatorTools("ai");
     }
 );
 
@@ -594,9 +590,7 @@ soundBtn?.addEventListener(
     "click",
     () => {
 
-        alert(
-            "Sound library coming soon."
-        );
+        openCreatorTools("sound");
     }
 );
 
@@ -684,3 +678,374 @@ window.addEventListener(
         stopCamera();
     }
 );
+
+
+// =====================================================
+// UDAAN CREATOR TOOLS - SOUND / EFFECTS / AI
+// =====================================================
+
+let creatorToolsPanel = null;
+let selectedSound = null;
+let selectedEffect = "none";
+let aiEnhanced = false;
+
+function closeCreatorTools() {
+    if (creatorToolsPanel) {
+        creatorToolsPanel.remove();
+        creatorToolsPanel = null;
+    }
+
+    if (cameraPreview) {
+        cameraPreview.style.filter = "";
+    }
+}
+
+function openCreatorTools(type) {
+    closeCreatorTools();
+
+    const panel = document.createElement("div");
+    panel.className = "creator-tools-panel";
+
+    let title = "";
+    let content = "";
+
+    if (type === "sound") {
+        title = "🎵 Add Sound";
+
+        content = `
+            <div class="tools-card">
+                <div class="tools-icon">🎵</div>
+                <div>
+                    <strong>Choose a sound</strong>
+                    <small>Select an audio file from your phone.</small>
+                </div>
+            </div>
+
+            <input id="creatorSoundFile"
+                   type="file"
+                   accept="audio/*"
+                   hidden>
+
+            <button class="tools-action" id="chooseSoundBtn">
+                🎧 Choose from device
+            </button>
+
+            <div id="soundInfo" class="tools-info">
+                No sound selected
+            </div>
+
+            <audio id="creatorSoundPreview"
+                   controls
+                   class="sound-preview"
+                   hidden></audio>
+
+            <label class="tools-label">
+                Volume
+                <input id="soundVolume"
+                       type="range"
+                       min="0"
+                       max="1"
+                       step="0.05"
+                       value="1">
+            </label>
+
+            <button class="tools-action secondary" id="removeSoundBtn">
+                ✕ Remove sound
+            </button>
+
+            <p class="tools-note">
+                The selected sound can be previewed while creating your video.
+            </p>
+        `;
+    }
+
+    if (type === "effects") {
+        title = "✨ Effects";
+
+        content = `
+            <div class="effect-grid">
+                <button class="effect-item active" data-effect="none">
+                    <span>○</span>
+                    <small>Normal</small>
+                </button>
+
+                <button class="effect-item" data-effect="warm">
+                    <span>☀️</span>
+                    <small>Warm</small>
+                </button>
+
+                <button class="effect-item" data-effect="cool">
+                    <span>❄️</span>
+                    <small>Cool</small>
+                </button>
+
+                <button class="effect-item" data-effect="vivid">
+                    <span>🌈</span>
+                    <small>Vivid</small>
+                </button>
+
+                <button class="effect-item" data-effect="mono">
+                    <span>◐</span>
+                    <small>B&W</small>
+                </button>
+
+                <button class="effect-item" data-effect="cinema">
+                    <span>🎬</span>
+                    <small>Cinema</small>
+                </button>
+
+                <button class="effect-item" data-effect="soft">
+                    <span>✨</span>
+                    <small>Soft</small>
+                </button>
+
+                <button class="effect-item" data-effect="dramatic">
+                    <span>🔥</span>
+                    <small>Dramatic</small>
+                </button>
+            </div>
+
+            <p class="tools-note">
+                Effects are applied live to the camera preview.
+            </p>
+        `;
+    }
+
+    if (type === "ai") {
+        title = "🤖 UDAAN AI";
+
+        content = `
+            <div class="tools-card ai-card">
+                <div class="tools-icon">🤖</div>
+                <div>
+                    <strong>Smart Creator Tools</strong>
+                    <small>Quick enhancements for your camera.</small>
+                </div>
+            </div>
+
+            <button class="tools-action" id="aiEnhanceBtn">
+                ✨ Auto Enhance
+            </button>
+
+            <button class="tools-action" id="aiCaptionBtn">
+                💬 Auto Captions
+            </button>
+
+            <button class="tools-action" id="aiPortraitBtn">
+                👤 Portrait Focus
+            </button>
+
+            <div id="aiStatus" class="tools-info">
+                AI tools ready
+            </div>
+
+            <p class="tools-note">
+                These creator tools work directly in your browser; advanced AI processing can be connected later.
+            </p>
+        `;
+    }
+
+    panel.innerHTML = `
+        <div class="tools-backdrop"></div>
+        <div class="tools-sheet">
+            <div class="tools-header">
+                <strong>${title}</strong>
+                <button id="closeToolsBtn" type="button">✕</button>
+            </div>
+            <div class="tools-body">
+                ${content}
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(panel);
+    creatorToolsPanel = panel;
+
+    panel.querySelector("#closeToolsBtn")?.addEventListener(
+        "click",
+        closeCreatorTools
+    );
+
+    panel.querySelector(".tools-backdrop")?.addEventListener(
+        "click",
+        closeCreatorTools
+    );
+
+    // SOUND
+    if (type === "sound") {
+        const fileInput = panel.querySelector("#creatorSoundFile");
+        const chooseBtn = panel.querySelector("#chooseSoundBtn");
+        const preview = panel.querySelector("#creatorSoundPreview");
+        const info = panel.querySelector("#soundInfo");
+        const volume = panel.querySelector("#soundVolume");
+        const remove = panel.querySelector("#removeSoundBtn");
+
+        chooseBtn?.addEventListener("click", () => {
+            fileInput?.click();
+        });
+
+        fileInput?.addEventListener("change", () => {
+            const file = fileInput.files?.[0];
+            if (!file) return;
+
+            selectedSound = file;
+
+            if (preview) {
+                preview.src = URL.createObjectURL(file);
+                preview.hidden = false;
+                preview.volume = Number(volume?.value || 1);
+            }
+
+            if (info) {
+                info.textContent = `Selected: ${file.name}`;
+            }
+        });
+
+        volume?.addEventListener("input", () => {
+            if (preview) {
+                preview.volume = Number(volume.value);
+            }
+        });
+
+        remove?.addEventListener("click", () => {
+            selectedSound = null;
+
+            if (preview) {
+                preview.pause();
+                preview.removeAttribute("src");
+                preview.hidden = true;
+            }
+
+            if (info) {
+                info.textContent = "No sound selected";
+            }
+
+            if (fileInput) {
+                fileInput.value = "";
+            }
+        });
+    }
+
+    // EFFECTS
+    if (type === "effects") {
+        panel.querySelectorAll("[data-effect]").forEach(button => {
+            button.addEventListener("click", () => {
+                panel.querySelectorAll("[data-effect]").forEach(
+                    item => item.classList.remove("active")
+                );
+
+                button.classList.add("active");
+
+                selectedEffect = button.dataset.effect || "none";
+
+                const filters = {
+                    none: "",
+                    warm: "sepia(.25) saturate(1.25)",
+                    cool: "saturate(1.1) hue-rotate(12deg)",
+                    vivid: "saturate(1.7) contrast(1.08)",
+                    mono: "grayscale(1)",
+                    cinema: "contrast(1.2) saturate(1.2)",
+                    soft: "brightness(1.08) saturate(.9)",
+                    dramatic: "contrast(1.35) saturate(1.35)"
+                };
+
+                if (cameraPreview) {
+                    cameraPreview.style.filter =
+                        filters[selectedEffect] || "";
+                }
+            });
+        });
+    }
+
+    // AI
+    if (type === "ai") {
+        const status = panel.querySelector("#aiStatus");
+
+        panel.querySelector("#aiEnhanceBtn")?.addEventListener(
+            "click",
+            () => {
+                aiEnhanced = !aiEnhanced;
+
+                if (cameraPreview) {
+                    cameraPreview.style.filter = aiEnhanced
+                        ? "brightness(1.08) contrast(1.12) saturate(1.18)"
+                        : "";
+                }
+
+                if (status) {
+                    status.textContent = aiEnhanced
+                        ? "✨ Auto Enhance enabled"
+                        : "Auto Enhance disabled";
+                }
+            }
+        );
+
+        panel.querySelector("#aiPortraitBtn")?.addEventListener(
+            "click",
+            () => {
+                if (cameraPreview) {
+                    cameraPreview.style.filter =
+                        "contrast(1.08) saturate(1.12) blur(.15px)";
+                }
+
+                if (status) {
+                    status.textContent =
+                        "👤 Portrait Focus applied";
+                }
+            }
+        );
+
+        panel.querySelector("#aiCaptionBtn")?.addEventListener(
+            "click",
+            () => {
+                if (!("SpeechRecognition" in window) &&
+                    !("webkitSpeechRecognition" in window)) {
+                    if (status) {
+                        status.textContent =
+                            "Auto Captions are not supported by this browser.";
+                    }
+                    return;
+                }
+
+                const Recognition =
+                    window.SpeechRecognition ||
+                    window.webkitSpeechRecognition;
+
+                const recognition = new Recognition();
+
+                recognition.lang = "hi-IN";
+                recognition.continuous = true;
+                recognition.interimResults = true;
+
+                recognition.onstart = () => {
+                    if (status) {
+                        status.textContent =
+                            "🎙️ Listening for captions...";
+                    }
+                };
+
+                recognition.onerror = () => {
+                    if (status) {
+                        status.textContent =
+                            "Caption microphone permission is required.";
+                    }
+                };
+
+                recognition.onend = () => {
+                    if (status &&
+                        status.textContent ===
+                        "🎙️ Listening for captions...") {
+                        status.textContent =
+                            "Auto Caption session ended.";
+                    }
+                };
+
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.warn("Caption start:", error);
+                }
+            }
+        );
+    }
+}
