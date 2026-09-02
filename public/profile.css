@@ -1241,3 +1241,139 @@ header button {
     }
 }
 
+
+/* ===== FINAL PROFILE ACTION BAR ===== */
+
+.profile-action-bar {
+    width: calc(100% - 48px);
+    max-width: 760px;
+    margin: 18px auto 16px;
+    min-height: 76px;
+    padding: 0 12px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: center;
+    gap: 4px;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 26px;
+    background: rgba(18, 20, 35, .82);
+    box-shadow:
+        0 12px 35px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.04);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.profile-action-btn {
+    height: 58px;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: #fff;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.profile-action-btn:hover {
+    background: rgba(255,255,255,.07);
+}
+
+.profile-action-btn:active {
+    transform: scale(.97);
+}
+
+.profile-action-btn .action-icon {
+    font-size: 28px;
+    line-height: 1;
+}
+
+.my-profile-action .action-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg,#6d24ff,#b72cff);
+    font-size: 20px;
+}
+
+.edit-action .action-icon {
+    font-size: 28px;
+}
+
+.logout-action {
+    color: #fff;
+}
+
+.logout-action .action-icon {
+    font-size: 31px;
+}
+
+.creator-studio-btn {
+    width: calc(100% - 48px) !important;
+    max-width: 760px;
+    margin: 8px auto 20px !important;
+    height: 64px !important;
+    border-radius: 24px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(25,20,45,.78) !important;
+    border: 1px solid rgba(180,100,255,.28) !important;
+    color: #fff !important;
+    font-size: 18px !important;
+}
+
+.creator-studio-btn span:first-child {
+    font-size: 27px;
+}
+
+/* Hide the old standalone subscribe button on own profile.
+   Subscribe still appears on another creator's profile. */
+#subscribeBtn:disabled {
+    margin-bottom: 0;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .profile-action-bar {
+        width: calc(100% - 32px);
+        min-height: 70px;
+        padding: 0 7px;
+        border-radius: 22px;
+    }
+
+    .profile-action-btn {
+        height: 54px;
+        gap: 6px;
+        font-size: 14px;
+    }
+
+    .profile-action-btn .action-icon {
+        font-size: 22px;
+    }
+
+    .my-profile-action .action-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 17px;
+    }
+
+    .logout-action .action-icon {
+        font-size: 26px;
+    }
+
+    .creator-studio-btn {
+        width: calc(100% - 32px) !important;
+    }
+}
+
