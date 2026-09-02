@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UDAAN - Create</title>
+<link rel="stylesheet" href="create.css">
+</head>
+
+<body>
+
+<header>
+    <button onclick="history.back()">←</button>
+    <h2>Create</h2>
+</header>
+
+<main>
+
+    <section class="create-options">
+
+        <button class="create-card" onclick="location.href='/upload.html'">
+            <span>🎥</span>
+            <strong>Upload Video</strong>
+            <small>Upload a video from your device</small>
+        </button>
+
+        <button class="create-card" onclick="openCamera('video')">
+            <span>📱</span>
+            <strong>Record Video</strong>
+            <small>Record a video using your camera</small>
+        </button>
+
+        <button class="create-card" onclick="openCamera('short')">
+            <span>⚡</span>
+            <strong>Create Short</strong>
+            <small>Create a vertical 9:16 Short</small>
+        </button>
+
+        <button class="create-card live" onclick="location.href='/live.html'">
+            <span>🔴</span>
+            <strong>Go Live</strong>
+            <small>Start a live video with camera</small>
+        </button>
+
+    </section>
+
+    <section id="cameraSection" class="camera-section hidden">
+
+        <div class="camera-header">
+            <h2 id="cameraTitle">Record Video</h2>
+            <button onclick="closeCamera()">✕</button>
+        </div>
+
+        <div class="camera-box">
+            <video id="cameraPreview" autoplay muted playsinline></video>
+            <div id="recordingBadge" class="recording-badge hidden">
+                🔴 REC <span id="timer">00:00</span>
+            </div>
+        </div>
+
+        <div class="camera-controls">
+
+            <button id="switchCameraBtn" onclick="switchCamera()">
+                🔄
+            </button>
+
+            <button id="recordBtn" class="record-btn" onclick="toggleRecording()">
+                ⏺
+            </button>
+
+            <button onclick="closeCamera()">
+                ✕
+            </button>
+
+        </div>
+
+        <p id="cameraMessage"></p>
+
+        <div id="recordedPreview" class="recorded-preview hidden">
+            <h3>Preview</h3>
+            <video id="recordedVideo" controls playsinline></video>
+
+            <button id="publishBtn" onclick="publishRecordedVideo()">
+                🚀 Continue to Publish
+            </button>
+        </div>
+
+    </section>
+
+</main>
+
+<script src="create.js"></script>
+
+</body>
+</html>

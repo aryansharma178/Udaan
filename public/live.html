@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UDAAN - Go Live</title>
+<link rel="stylesheet" href="live.css">
+</head>
+
+<body>
+
+<header>
+    <button onclick="history.back()">←</button>
+    <h2>🔴 Go Live</h2>
+</header>
+
+<main>
+
+    <section id="setupPanel" class="panel">
+
+        <h1>Start your live</h1>
+        <p>Connect with your UDAAN audience in real time.</p>
+
+        <label>Live Title</label>
+        <input
+            id="liveTitle"
+            type="text"
+            maxlength="100"
+            placeholder="Enter your live title"
+        >
+
+        <label>Camera</label>
+        <select id="cameraSelect">
+            <option value="user">🤳 Front Camera</option>
+            <option value="environment">📷 Back Camera</option>
+        </select>
+
+        <button id="previewBtn" class="primary">
+            🎥 Start Camera Preview
+        </button>
+
+        <p id="setupMessage"></p>
+
+    </section>
+
+
+    <section id="livePanel" class="panel hidden">
+
+        <div class="live-top">
+
+            <div>
+                <span class="live-badge">🔴 LIVE</span>
+                <strong id="liveTitleDisplay">UDAAN Live</strong>
+            </div>
+
+            <div class="viewer-count">
+                👁 <span id="viewerCount">0</span>
+            </div>
+
+        </div>
+
+
+        <div class="video-wrapper">
+
+            <video
+                id="livePreview"
+                autoplay
+                muted
+                playsinline
+            ></video>
+
+            <div id="liveIndicator">
+                🔴 LIVE
+            </div>
+
+        </div>
+
+
+        <div class="live-controls">
+
+            <button id="switchCameraBtn">
+                🔄
+            </button>
+
+            <button id="muteBtn">
+                🎙️
+            </button>
+
+            <button id="endLiveBtn" class="end-live">
+                ⏹ End Live
+            </button>
+
+        </div>
+
+
+        <section class="chat">
+
+            <h3>💬 Live Chat</h3>
+
+            <div id="chatMessages"></div>
+
+            <div class="chat-input">
+
+                <input
+                    id="chatInput"
+                    type="text"
+                    maxlength="500"
+                    placeholder="Say something..."
+                >
+
+                <button id="sendChatBtn">
+                    ➤
+                </button>
+
+            </div>
+
+        </section>
+
+    </section>
+
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="live.js"></script>
+
+</body>
+</html>

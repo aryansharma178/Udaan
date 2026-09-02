@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const { requireAuth } = require('./middleware/auth');
 const multer = require('multer');
 const { logError, readErrors } = require('./errorMonitor');
@@ -11,6 +13,14 @@ const {
 } = require('./notificationsStore');
 
 const app = express();
+const httpServer = http.createServer(app);
+
+const io = new Server(httpServer, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
@@ -1073,6 +1083,173 @@ app.get('/api/admin/errors', requireAuth, (req, res) => {
 /*
  * Final Express error handler
  */
+
+/* =====================================================
+ * UDAAN LIVE STREAMING - SOCKET.IO FOUNDATION
+ * ===================================================== */
+
+const liveRooms = new Map();
+
+io.on('connection', (socket) => {
+
+    console.log('UDAAN Socket connected:', socket.id);
+
+    socket.on('live:create', (data = {}, callback) => {
+        try {
+            const username = String(data.username || '').trim();
+            const title = String(data.title || '').trim();
+
+            if (!username) {
+                return callback?.({
+                    success: false,
+                    message: 'Username required'
+                });
+            }
+
+            const roomId =
+                `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+            const room = {
+                roomId,
+                host: username,
+                title: title || 'UDAAN Live',
+                viewers: 0,
+                createdAt: new Date().toISOString()
+            };
+
+            liveRooms.set(roomId, room);
+
+            socket.join(roomId);
+            socket.data.liveRoom = roomId;
+            socket.data.username = username;
+            socket.data.isHost = true;
+
+            callback?.({
+                success: true,
+                room
+            });
+
+            io.to(roomId).emit('live:status', {
+                live: true,
+                room
+            });
+
+            console.log(`UDAAN LIVE created: ${roomId} by ${username}`);
+
+        } catch (error) {
+            console.error('Live create error:', error);
+
+            callback?.({
+                success: false,
+                message: 'Unable to create live room'
+            });
+        }
+    });
+
+    socket.on('live:join', (data = {}, callback) => {
+        try {
+            const roomId = String(data.roomId || '').trim();
+            const username = String(data.username || '').trim();
+
+            const room = liveRooms.get(roomId);
+
+            if (!room) {
+                return callback?.({
+                    success: false,
+                    message: 'Live room not found'
+                });
+            }
+
+            socket.join(roomId);
+
+            socket.data.liveRoom = roomId;
+            socket.data.username = username;
+            socket.data.isHost = false;
+
+            room.viewers++;
+
+            io.to(roomId).emit('live:viewers', {
+                viewers: room.viewers
+            });
+
+            callback?.({
+                success: true,
+                room
+            });
+
+        } catch (error) {
+            console.error('Live join error:', error);
+
+            callback?.({
+                success: false,
+                message: 'Unable to join live'
+            });
+        }
+    });
+
+    socket.on('live:chat', (data = {}) => {
+        const roomId = socket.data.liveRoom;
+
+        if (!roomId || !liveRooms.has(roomId)) return;
+
+        const message = String(data.message || '').trim();
+
+        if (!message) return;
+
+        io.to(roomId).emit('live:chat', {
+            username: socket.data.username || 'Viewer',
+            message: message.slice(0, 500),
+            createdAt: new Date().toISOString()
+        });
+    });
+
+    socket.on('live:end', () => {
+        const roomId = socket.data.liveRoom;
+
+        if (!roomId) return;
+
+        const room = liveRooms.get(roomId);
+
+        if (!room || !socket.data.isHost) return;
+
+        io.to(roomId).emit('live:ended', {
+            roomId,
+            message: 'This live stream has ended.'
+        });
+
+        liveRooms.delete(roomId);
+
+        console.log(`UDAAN LIVE ended: ${roomId}`);
+    });
+
+    socket.on('disconnect', () => {
+        const roomId = socket.data.liveRoom;
+
+        if (roomId && liveRooms.has(roomId)) {
+            const room = liveRooms.get(roomId);
+
+            if (socket.data.isHost) {
+                io.to(roomId).emit('live:ended', {
+                    roomId,
+                    message: 'The live stream has ended.'
+                });
+
+                liveRooms.delete(roomId);
+
+            } else {
+                room.viewers = Math.max(0, room.viewers - 1);
+
+                io.to(roomId).emit('live:viewers', {
+                    viewers: room.viewers
+                });
+            }
+        }
+
+        console.log('UDAAN Socket disconnected:', socket.id);
+    });
+});
+
+
 app.use((error, req, res, next) => {
     logError({
         type: 'unhandled_server_error',
@@ -1090,6 +1267,90 @@ app.use((error, req, res, next) => {
     });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+
+// ===============================
+// UDAAN WebRTC Live Signaling
+// ===============================
+
+io.on('connection', (socket) => {
+
+    socket.on('live:viewer-ready', ({ roomId } = {}) => {
+        if (!roomId) return;
+
+        const room = liveRooms.get(roomId);
+        if (!room) return;
+
+        const members = io.sockets.adapter.rooms.get(roomId);
+        if (!members) return;
+
+        for (const memberId of members) {
+            if (memberId === socket.id) continue;
+
+            const member = io.sockets.sockets.get(memberId);
+
+            if (member && member.data && member.data.isHost) {
+                member.emit('live:viewer-joined', {
+                    roomId,
+                    viewerSocketId: socket.id
+                });
+                break;
+            }
+        }
+    });
+
+    socket.on('live:offer', ({ roomId, viewerSocketId, offer } = {}) => {
+        if (!roomId || !viewerSocketId || !offer) return;
+
+        const room = liveRooms.get(roomId);
+        if (!room) return;
+
+        const viewer = io.sockets.sockets.get(viewerSocketId);
+
+        if (viewer) {
+            viewer.emit('live:offer', {
+                roomId,
+                offer,
+                hostSocketId: socket.id
+            });
+        }
+    });
+
+    socket.on('live:answer', ({ roomId, hostSocketId, answer } = {}) => {
+        if (!roomId || !hostSocketId || !answer) return;
+
+        const room = liveRooms.get(roomId);
+        if (!room) return;
+
+        const host = io.sockets.sockets.get(hostSocketId);
+
+        if (host) {
+            host.emit('live:answer', {
+                roomId,
+                answer,
+                viewerSocketId: socket.id
+            });
+        }
+    });
+
+    socket.on('live:ice', ({ roomId, targetSocketId, candidate } = {}) => {
+        if (!roomId || !targetSocketId || !candidate) return;
+
+        const room = liveRooms.get(roomId);
+        if (!room) return;
+
+        const target = io.sockets.sockets.get(targetSocketId);
+
+        if (target) {
+            target.emit('live:ice', {
+                roomId,
+                candidate,
+                fromSocketId: socket.id
+            });
+        }
+    });
+
+});
+
+httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`UDAAN server running on port ${PORT}`);
 });

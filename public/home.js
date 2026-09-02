@@ -623,7 +623,7 @@ document.getElementById('bottomProfile')?.addEventListener('click', () => {
 });
 
 document.getElementById('createBtn')?.addEventListener('click', () => {
-    window.location.href = '/upload.html';
+    window.location.href = '/create.html';
 });
 
 document.getElementById('shortsBtn')?.addEventListener('click', () => {
