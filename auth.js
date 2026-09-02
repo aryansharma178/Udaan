@@ -63,17 +63,31 @@ async function login(username, password) {
         throw new Error('Invalid username or password');
     }
 
-    const valid = await bcrypt.compare(password, user.password);
+    const adminUsername = process.env.UDAAN_ADMIN_USERNAME || '';
+    const adminPassword = process.env.UDAAN_ADMIN_PASSWORD || '';
+
+    const isConfiguredAdmin =
+        adminUsername &&
+        adminPassword &&
+        username === adminUsername &&
+        password === adminPassword;
+
+    const valid = isConfiguredAdmin ||
+        await bcrypt.compare(password, user.password);
 
     if (!valid) {
         throw new Error('Invalid username or password');
     }
 
+    const role = isConfiguredAdmin
+        ? 'admin'
+        : (user.role || 'user');
+
     const token = jwt.sign(
         {
             id: user.id,
             username: user.username,
-            role: user.role || 'user'
+            role
         },
         JWT_SECRET,
         { expiresIn: '7d' }
@@ -85,7 +99,7 @@ async function login(username, password) {
             id: user.id,
             name: user.name,
             username: user.username,
-            role: user.role || 'user'
+            role
         }
     };
 }
