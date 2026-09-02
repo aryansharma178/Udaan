@@ -20,6 +20,7 @@ const cameraSelect = $('cameraSelect');
 const startCameraBtn = $('startCameraBtn');
 const startLiveBtn = $('startLiveBtn');
 const livePreview = $('livePreview');
+const setupCameraPreview = $('setupCameraPreview');
 const liveTitle = $('liveTitleDisplay');
 const viewerCount = $('viewerCount');
 const setupMessage = $('setupMessage');
@@ -171,6 +172,10 @@ async function startCamera() {
 
         if (livePreview) {
             livePreview.srcObject = stream;
+
+        if (setupCameraPreview) {
+            setupCameraPreview.srcObject = stream;
+        }
         }
 
         if (startLiveBtn) {
@@ -215,6 +220,10 @@ function stopCamera() {
 
     if (livePreview) {
         livePreview.srcObject = null;
+    }
+
+    if (setupCameraPreview) {
+        setupCameraPreview.srcObject = null;
     }
 }
 
@@ -609,6 +618,10 @@ async function switchCamera() {
 
     if (livePreview) {
         livePreview.srcObject = stream;
+    }
+
+    if (setupCameraPreview) {
+        setupCameraPreview.srcObject = stream;
     }
 
     if (isHost) {
