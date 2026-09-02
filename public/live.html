@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UDAAN - Go Live</title>
-<link rel="stylesheet" href="live.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UDAAN - Go Live</title>
+    <link rel="stylesheet" href="live.css">
 </head>
 
 <body>
 
-<header>
-    <button onclick="history.back()">←</button>
+<header class="live-header">
+    <button id="backBtn" type="button">←</button>
     <h2>🔴 Go Live</h2>
 </header>
 
@@ -19,9 +19,13 @@
     <section id="setupPanel" class="panel">
 
         <h1>Start your live</h1>
-        <p>Connect with your UDAAN audience in real time.</p>
+
+        <p>
+            Connect with your UDAAN audience in real time.
+        </p>
 
         <label>Live Title</label>
+
         <input
             id="liveTitle"
             type="text"
@@ -29,51 +33,22 @@
             placeholder="Enter your live title"
         >
 
-        <label>Camera</label>
-        <select id="cameraSelect">
-            <option value="user">🤳 Front Camera</option>
-            <option value="environment">📷 Back Camera</option>
-        </select>
-
-        <button id="startCameraBtn" class="primary">
-            🎥 Start Camera Preview
-        </button>
-
-        <button id="startLiveBtn" class="primary" type="button" disabled>
+        <button
+            id="startLiveBtn"
+            class="primary"
+            type="button"
+        >
             🔴 Start Live
         </button>
-
-        <div class="setup-video-wrapper">
-            <video
-                id="setupCameraPreview"
-                autoplay
-                muted
-                playsinline
-            ></video>
-        </div>
 
         <p id="setupMessage"></p>
 
     </section>
 
 
-    <section id="livePanel" class="panel hidden">
+    <section id="livePanel" class="live-fullscreen hidden">
 
-        <div class="live-top">
-
-            <div>
-                <span class="live-badge">🔴 LIVE</span>
-                <strong id="liveTitleDisplay">UDAAN Live</strong>
-            </div>
-
-            <div class="viewer-count">
-                👁 <span id="viewerCount">0</span>
-            </div>
-
-        </div>
-
-
-        <div class="video-wrapper">
+        <div class="live-video-area">
 
             <video
                 id="livePreview"
@@ -82,26 +57,72 @@
                 playsinline
             ></video>
 
-            <div id="liveIndicator">
-                🔴 LIVE
+            <div class="live-top-overlay">
+
+                <span class="live-badge">
+                    🔴 LIVE
+                </span>
+
+                <span id="liveTitleDisplay">
+                    UDAAN Live
+                </span>
+
+                <span class="viewer-count">
+                    👁 <span id="viewerCount">0</span>
+                </span>
+
             </div>
 
-        </div>
+
+            <div class="camera-switch">
+
+                <select id="cameraSelect">
+
+                    <option value="user">
+                        🤳 Front
+                    </option>
+
+                    <option value="environment">
+                        📷 Back
+                    </option>
+
+                </select>
+
+            </div>
 
 
-        <div class="live-controls">
+            <div class="fullscreen-controls">
 
-            <button id="switchCameraBtn">
-                🔄
-            </button>
+                <button
+                    id="switchCameraBtn"
+                    type="button"
+                >
+                    🔄
+                </button>
 
-            <button id="muteBtn">
-                🎙️
-            </button>
+                <button
+                    id="muteBtn"
+                    type="button"
+                >
+                    🎙️
+                </button>
 
-            <button id="endLiveBtn" class="end-live">
-                ⏹ End Live
-            </button>
+                <button
+                    id="fullscreenBtn"
+                    type="button"
+                >
+                    ⛶
+                </button>
+
+                <button
+                    id="endLiveBtn"
+                    class="end-live"
+                    type="button"
+                >
+                    ⏹ End Live
+                </button>
+
+            </div>
 
         </div>
 
@@ -121,7 +142,10 @@
                     placeholder="Say something..."
                 >
 
-                <button id="sendChatBtn">
+                <button
+                    id="sendChatBtn"
+                    type="button"
+                >
                     ➤
                 </button>
 

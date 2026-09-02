@@ -1187,19 +1187,36 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('live:chat', (data = {}) => {
+    socket.on('live:chat', (data = {}, callback) => {
         const roomId = socket.data.liveRoom;
 
-        if (!roomId || !liveRooms.has(roomId)) return;
+        if (!roomId || !liveRooms.has(roomId)) {
+            callback?.({
+                success: false,
+                message: 'You are not connected to a live room.'
+            });
+            return;
+        }
 
         const message = String(data.message || '').trim();
 
-        if (!message) return;
+        if (!message) {
+            callback?.({
+                success: false,
+                message: 'Message is empty.'
+            });
+            return;
+        }
 
         io.to(roomId).emit('live:chat', {
+            roomId,
             username: socket.data.username || 'Viewer',
             message: message.slice(0, 500),
             createdAt: new Date().toISOString()
+        });
+
+        callback?.({
+            success: true
         });
     });
 

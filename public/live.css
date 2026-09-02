@@ -2,179 +2,237 @@
     box-sizing: border-box;
 }
 
+html,
 body {
     margin: 0;
+    padding: 0;
+    min-height: 100%;
     font-family: Arial, sans-serif;
-    background: #f7f7f7;
-    color: #171717;
+    background: #f5f5f5;
 }
 
-header {
-    height: 62px;
-    background: white;
-    border-bottom: 1px solid #ddd;
+button,
+input,
+select {
+    font: inherit;
+}
+
+.live-header {
+    height: 70px;
     display: flex;
     align-items: center;
-    padding: 0 18px;
     gap: 18px;
+    padding: 0 20px;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
 }
 
-header button {
+.live-header button {
     border: 0;
-    background: none;
-    font-size: 28px;
+    background: transparent;
+    font-size: 30px;
+    cursor: pointer;
 }
 
-header h2 {
+.live-header h2 {
     margin: 0;
+    font-size: 25px;
 }
 
 main {
     width: 100%;
-    max-width: 700px;
+    max-width: 900px;
     margin: auto;
-    padding: 25px 18px 50px;
 }
 
 .panel {
-    background: white;
-    border-radius: 22px;
-    padding: 25px;
-    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    margin: 30px 20px;
+    padding: 35px;
+    background: #fff;
+    border-radius: 24px;
 }
 
 .panel h1 {
     margin-top: 0;
+    font-size: 40px;
 }
 
-.panel > p {
+.panel p {
     color: #666;
+    font-size: 18px;
+    line-height: 1.5;
 }
 
-label {
+.panel label {
     display: block;
+    margin-top: 25px;
+    margin-bottom: 8px;
     font-weight: bold;
-    margin: 18px 0 8px;
+    font-size: 18px;
 }
 
-input,
-select {
+.panel input,
+.panel select {
     width: 100%;
-    padding: 14px;
+    padding: 17px;
     border: 1px solid #ddd;
-    border-radius: 12px;
-    font-size: 16px;
-    background: white;
+    border-radius: 15px;
+    font-size: 18px;
 }
 
 .primary {
     width: 100%;
     margin-top: 25px;
-    padding: 16px;
+    padding: 18px;
     border: 0;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #ff8a00, #f4511e);
-    color: white;
-    font-size: 16px;
+    border-radius: 18px;
+    background: linear-gradient(90deg, #ff9800, #ff3d00);
+    color: #fff;
     font-weight: bold;
+    font-size: 20px;
+    cursor: pointer;
 }
 
 #setupMessage {
     text-align: center;
-    color: #f4511e;
-}
-
-.live-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.live-badge {
-    display: inline-block;
-    background: #ff3030;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-size: 13px;
-    margin-right: 8px;
-}
-
-.viewer-count {
+    color: #e65100;
     font-weight: bold;
 }
 
-.video-wrapper {
+.hidden {
+    display: none !important;
+}
+
+.live-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #000;
+    overflow-y: auto;
+}
+
+.live-video-area {
     position: relative;
     width: 100%;
-    aspect-ratio: 16 / 9;
+    height: 75vh;
+    min-height: 450px;
     background: #000;
-    border-radius: 18px;
-    overflow: hidden;
 }
 
 #livePreview {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
-#liveIndicator {
+.live-top-overlay {
     position: absolute;
-    top: 12px;
-    left: 12px;
-    background: rgba(0,0,0,.7);
-    color: white;
-    padding: 7px 10px;
-    border-radius: 8px;
+    top: 18px;
+    left: 18px;
+    right: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+    z-index: 5;
 }
 
-.live-controls {
+.live-badge {
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, .75);
+    font-weight: bold;
+}
+
+#liveTitleDisplay {
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, .55);
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.viewer-count {
+    margin-left: auto;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, .65);
+}
+
+.camera-switch {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 10;
+}
+
+.camera-switch select {
+    width: auto;
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, .75);
+    color: #fff;
+}
+
+.fullscreen-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 15px;
-    padding: 18px 0;
+    gap: 12px;
+    z-index: 10;
 }
 
-.live-controls button {
+.fullscreen-controls button {
+    min-width: 58px;
+    height: 55px;
+    padding: 0 16px;
     border: 0;
-    border-radius: 14px;
-    padding: 13px 18px;
-    font-size: 16px;
-    background: #eee;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .9);
+    cursor: pointer;
+    font-size: 20px;
 }
 
-.live-controls .end-live {
-    background: #ff3030;
-    color: white;
+.fullscreen-controls .end-live {
+    background: #f00;
+    color: #fff;
     font-weight: bold;
 }
 
 .chat {
-    border-top: 1px solid #eee;
-    padding-top: 15px;
+    background: #fff;
+    padding: 18px;
 }
 
 .chat h3 {
-    margin-top: 0;
+    margin: 0 0 12px;
+    font-size: 22px;
 }
 
-#chatMessages {
-    height: 220px;
+#chatList {
+    max-height: 220px;
     overflow-y: auto;
-    background: #f7f7f7;
-    border-radius: 14px;
-    padding: 10px;
 }
 
 .chat-message {
-    margin-bottom: 9px;
+    padding: 8px 5px;
 }
 
 .chat-message strong {
-    margin-right: 5px;
+    margin-right: 8px;
+}
+
+.chat-system {
+    padding: 8px 5px;
+    color: #777;
 }
 
 .chat-input {
@@ -185,47 +243,60 @@ select {
 
 .chat-input input {
     flex: 1;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 14px;
 }
 
 .chat-input button {
-    width: 52px;
+    width: 55px;
     border: 0;
-    border-radius: 12px;
-    background: #f4511e;
-    color: white;
-    font-size: 20px;
-}
-
-.hidden {
-    display: none !important;
-}
-
-@media (max-width: 500px) {
-    .video-wrapper {
-        aspect-ratio: 9 / 16;
-    }
-}
-
-.setup-video-wrapper {
-    width: 100%;
-    margin: 18px 0;
-    border-radius: 18px;
-    overflow: hidden;
-    background: #000;
-    aspect-ratio: 16 / 9;
-    display: flex;
-}
-
-#setupCameraPreview {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+    border-radius: 14px;
+    background: #ff6500;
+    color: #fff;
+    font-size: 22px;
 }
 
 @media (max-width: 600px) {
-    .setup-video-wrapper {
-        aspect-ratio: 9 / 16;
-        max-height: 55vh;
+
+    .live-header {
+        display: none;
+    }
+
+    .live-video-area {
+        height: 72vh;
+        min-height: 0;
+    }
+
+    #liveTitleDisplay {
+        max-width: 38%;
+        font-size: 13px;
+    }
+
+    .live-top-overlay {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+    }
+
+    .camera-switch {
+        top: 65px;
+        right: 12px;
+    }
+
+    .fullscreen-controls {
+        bottom: 12px;
+        left: 10px;
+        right: 10px;
+    }
+
+    .fullscreen-controls button {
+        min-width: 48px;
+        height: 48px;
+        padding: 0 10px;
+    }
+
+    .chat {
+        padding: 12px;
     }
 }

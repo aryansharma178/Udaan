@@ -17,7 +17,6 @@ const setupPanel = $('setupPanel');
 const livePanel = $('livePanel');
 const titleInput = $('liveTitle');
 const cameraSelect = $('cameraSelect');
-const startCameraBtn = $('startCameraBtn');
 const startLiveBtn = $('startLiveBtn');
 const livePreview = $('livePreview');
 const setupCameraPreview = $('setupCameraPreview');
@@ -30,6 +29,7 @@ const shareLiveBtn = $('shareLiveBtn');
 const switchCameraBtn = $('switchCameraBtn');
 const muteBtn = $('muteBtn');
 const endLiveBtn = $('endLiveBtn');
+const fullscreenBtn = $('fullscreenBtn');
 const chatList = $('chatList');
 const chatInput = $('chatInput');
 const sendChatBtn = $('sendChatBtn');
@@ -558,11 +558,21 @@ function sendChat() {
 
     if (!message || !roomId) return;
 
-    socket.emit('live:chat', {
-        roomId,
-        username,
-        message
-    });
+    socket.emit(
+        'live:chat',
+        {
+            roomId,
+            username,
+            message
+        },
+        (response) => {
+            if (response && response.success === false) {
+                addSystemMessage(
+                    response.message || 'Message could not be sent.'
+                );
+            }
+        }
+    );
 
     chatInput.value = '';
 }
@@ -703,6 +713,29 @@ function endLive() {
     addSystemMessage(
         'Live stream ended.'
     );
+}
+
+
+async function enterLiveFullscreen() {
+    const target = document.getElementById('livePanel');
+
+    if (!target) return;
+
+    try {
+        if (!document.fullscreenElement) {
+            if (target.requestFullscreen) {
+                await target.requestFullscreen();
+            } else if (target.webkitRequestFullscreen) {
+                target.webkitRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                await document.exitFullscreen();
+            }
+        }
+    } catch (error) {
+        console.warn('Fullscreen unavailable:', error);
+    }
 }
 
 async function shareLive() {
@@ -851,14 +884,32 @@ socket.on(
     }
 );
 
-startCameraBtn?.addEventListener(
-    'click',
-    startCamera
-);
+
 
 startLiveBtn?.addEventListener(
     'click',
-    createLive
+    async () => {
+        try {
+            startLiveBtn.disabled = true;
+
+            await startCamera();
+
+            if (!stream) {
+                startLiveBtn.disabled = false;
+                return;
+            }
+
+            await createLive();
+
+        } catch (error) {
+            console.error('Start live error:', error);
+            startLiveBtn.disabled = false;
+            showMessage(
+                'Unable to start live: ' + error.message,
+                'error'
+            );
+        }
+    }
 );
 
 switchCameraBtn?.addEventListener(
@@ -890,6 +941,11 @@ shareLiveBtn?.addEventListener(
     shareLive
 );
 
+fullscreenBtn?.addEventListener(
+    'click',
+    enterLiveFullscreen
+);
+
 sendChatBtn?.addEventListener(
     'click',
     sendChat
@@ -902,6 +958,19 @@ chatInput?.addEventListener(
         if (event.key === 'Enter') {
             event.preventDefault();
             sendChat();
+        }
+    }
+);
+
+$('backBtn')?.addEventListener(
+    'click',
+    () => {
+        if (roomId) {
+            if (confirm('Leave the live stream?')) {
+                endLive();
+            }
+        } else {
+            history.back();
         }
     }
 );
