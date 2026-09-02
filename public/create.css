@@ -408,3 +408,10 @@ button {
         font-size: 13px;
     }
 }
+
+.tool-btn.active-tool,
+.icon-btn.active-tool {
+    opacity: 1;
+    transform: scale(1.08);
+}
+

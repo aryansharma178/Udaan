@@ -643,20 +643,13 @@ window.addEventListener(
     "load",
     async () => {
 
-        /*
-         * Create screen opens in Live mode
-         * according to the requested design.
-         */
-
         currentMode = "live";
 
-        /*
-         * We don't start the camera automatically
-         * on page load because browsers require
-         * user interaction for reliable permission.
-         *
-         * Camera starts when Video/Short is selected.
-         */
+        try {
+            await startCamera();
+        } catch (error) {
+            console.error("Initial camera start:", error);
+        }
     }
 );
 
