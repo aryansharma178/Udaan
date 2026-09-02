@@ -695,9 +695,8 @@ function closeCreatorTools() {
         creatorToolsPanel = null;
     }
 
-    if (cameraPreview) {
-        cameraPreview.style.filter = "";
-    }
+    // Keep the currently selected effect/AI enhancement active
+    // even after the tools panel is closed.
 }
 
 function openCreatorTools(type) {
@@ -894,6 +893,9 @@ function openCreatorTools(type) {
                 preview.src = URL.createObjectURL(file);
                 preview.hidden = false;
                 preview.volume = Number(volume?.value || 1);
+
+                // Start preview after the user's file-selection action.
+                preview.play().catch(() => {});
             }
 
             if (info) {
