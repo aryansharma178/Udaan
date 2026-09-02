@@ -74,6 +74,9 @@
         <button id="editProfileBtn" class="edit-profile-btn">
             ⚙️ Edit Profile
         </button>
+        <button id="creatorStudioBtn" class="creator-studio-btn" type="button">
+            🚀 Creator Studio
+        </button>
 
         <div id="editProfilePanel" class="edit-profile-panel">
             <h3>Edit Profile</h3>
@@ -689,6 +692,12 @@ photoInput?.addEventListener("change", async () => {
         changePhotoBtn.textContent = "📸 Change Photo";
         photoInput.value = "";
     }
+});
+
+
+/* CREATOR STUDIO */
+document.getElementById("creatorStudioBtn")?.addEventListener("click", () => {
+    window.location.href = "/studio.html";
 });
 
 loadProfile();
