@@ -266,7 +266,7 @@ async function createLive() {
             }
 
             isHost = true;
-            roomId = response.roomId;
+            roomId = response.room?.roomId || null;
 
             setupPanel?.classList.add('hidden');
             livePanel?.classList.remove('hidden');
