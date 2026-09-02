@@ -119,8 +119,13 @@
             </div>
 
             <div>
-                <strong id="tokens">0</strong>
-                <span>Tokens</span>
+                <strong id="earnings">₹0</strong>
+                <span>Earnings</span>
+            </div>
+
+            <div>
+                <strong id="monetization">Not Eligible</strong>
+                <span>Monetization</span>
             </div>
         </div>
 
@@ -342,8 +347,13 @@ async function loadProfile() {
         document.getElementById("watchMinutes").textContent =
             profile.watch_minutes || 0;
 
-        document.getElementById("tokens").textContent =
-            profile.tokens || 0;
+        document.getElementById("earnings").textContent =
+            "₹" + Number(profile.earnings || 0).toFixed(2);
+
+        document.getElementById("monetization").textContent =
+            profile.monetization && profile.monetization.eligible
+                ? "Eligible"
+                : "Not Eligible";
 
         await Promise.all([
             setupSubscribe(profile.username),

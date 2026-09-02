@@ -249,10 +249,9 @@ router.post('/:id/view', (req, res) => {
 });
 
 
-router.post('/:id/watch', (req, res) => {
+router.post('/:id/watch', requireAuth, (req, res) => {
     try {
         const dataFile = path.join(__dirname, '../videos.json');
-        const usersFile = path.join(__dirname, '../users.json');
 
         if (!fs.existsSync(dataFile)) {
             return res.status(404).json({
@@ -262,10 +261,7 @@ router.post('/:id/watch', (req, res) => {
         }
 
         const videos = getVideos();
-
-        const video = videos.find(
-            v => v.id === req.params.id
-        );
+        const video = videos.find(v => v.id === req.params.id);
 
         if (!video) {
             return res.status(404).json({
@@ -274,9 +270,7 @@ router.post('/:id/watch', (req, res) => {
             });
         }
 
-        const username = String(
-            req.body.username || ''
-        ).trim();
+        const username = String(req.user.username || '').trim();
 
         const seconds = Math.min(
             Math.max(Number(req.body.seconds) || 0, 0),
@@ -286,74 +280,48 @@ router.post('/:id/watch', (req, res) => {
         if (!username || seconds <= 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Username and watch time required'
+                message: 'Watch time required'
             });
         }
 
-        if (!fs.existsSync(usersFile)) {
-            return res.status(404).json({
-                success: false,
-                message: 'Users file not found'
+        // Creator cannot generate monetized watch time on own video.
+        if (String(video.username || '').trim() === username) {
+            return res.json({
+                success: true,
+                watchSeconds: video.watchSeconds || 0,
+                watchMinutes: video.watchMinutes || 0,
+                earnings: Number(video.earnings || 0)
             });
         }
 
-        const users = JSON.parse(
-            fs.readFileSync(usersFile, 'utf8')
+        video.watchSeconds = (video.watchSeconds || 0) + seconds;
+        video.watchMinutes = Math.floor(video.watchSeconds / 60);
+
+        const viewRate = Number(
+            process.env.UDAAN_EARNING_PER_1000_VIEWS || 1
         );
 
-        const viewer = users.find(
-            u => u.username === username
+        const minuteRate = Number(
+            process.env.UDAAN_EARNING_PER_1000_WATCH_MINUTES || 2
         );
 
-        if (!viewer) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
+        const viewEarning =
+            ((video.views || 0) / 1000) * viewRate;
 
-        video.watchSeconds =
-            (video.watchSeconds || 0) + seconds;
+        const watchEarning =
+            ((video.watchMinutes || 0) / 1000) * minuteRate;
 
-        video.watchMinutes =
-            Math.floor(video.watchSeconds / 60);
-
-        viewer.watchSeconds =
-            (viewer.watchSeconds || 0) + seconds;
-
-        const oldMinutes =
-            Math.floor(
-                (viewer.watchSeconds - seconds) / 60
-            );
-
-        const newMinutes =
-            Math.floor(viewer.watchSeconds / 60);
-
-        viewer.watch_minutes = newMinutes;
-
-        const earnedTokens =
-            Math.max(newMinutes - oldMinutes, 0);
-
-        if (earnedTokens > 0) {
-            viewer.tokens =
-                (viewer.tokens || 0) + earnedTokens;
-        }
-
-        fs.writeFileSync(
-            dataFile,
-            JSON.stringify(videos, null, 2)
+        video.earnings = Number(
+            (viewEarning + watchEarning).toFixed(4)
         );
 
-        fs.writeFileSync(
-            usersFile,
-            JSON.stringify(users, null, 2)
-        );
+        saveVideos(videos);
 
         res.json({
             success: true,
-            watchMinutes: viewer.watch_minutes,
-            tokens: viewer.tokens || 0,
-            earnedTokens
+            watchSeconds: video.watchSeconds,
+            watchMinutes: video.watchMinutes,
+            earnings: video.earnings
         });
 
     } catch (error) {

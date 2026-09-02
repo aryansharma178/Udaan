@@ -441,13 +441,21 @@ main {
     text-align: center;
 }
 
-/* Tokens ko special highlight */
-.stats div:last-child {
+/* Monetization / earnings highlight */
+.stats div:nth-last-child(2) {
     background: #fff8e1;
 }
 
-.stats div:last-child strong {
+.stats div:nth-last-child(2) strong {
     color: #d28a00;
+}
+
+.stats div:last-child {
+    background: #eefbf3;
+}
+
+.stats div:last-child strong {
+    color: #16834b;
 }
 
 /* Watch time highlight */

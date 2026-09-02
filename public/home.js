@@ -364,7 +364,8 @@ async function loadVideos() {
                         {
                             method: 'POST',
                             headers: {
-                                'Content-Type': 'application/json'
+                                'Content-Type': 'application/json',
+                                                  'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
                             },
                             body: JSON.stringify({
                                 comment: comment,
@@ -402,7 +403,7 @@ async function loadVideos() {
                     commentsList.appendChild(item);
 
                     commentInput.value = '';
-                    commentCount.textContent = `💬 ${result.totalComments}`;
+        commentCount.textContent = 'Comments: ' + result.totalComments;
 
                 } catch (error) {
                     console.error('Comment error:', error);
@@ -561,10 +562,11 @@ async function loadVideos() {
                             {
                                 method: 'POST',
                                 headers: {
-                                    'Content-Type': 'application/json'
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
                                 },
                                 body: JSON.stringify({
-                                    username: currentUser.username,
+
                                     seconds: Math.min(watchedSeconds, 30)
                                 })
                             }

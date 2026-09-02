@@ -350,8 +350,34 @@ app.get('/api/profile/:username', (req, res) => {
                 profile_photo: user.profile_photo || null,
                 avatar: user.avatar || null,
                 subscribers: user.subscribers || 0,
-                watch_minutes: user.watch_minutes || 0,
-                tokens: user.tokens || 0,
+                watch_minutes: userVideos.reduce(
+                    (sum, video) => sum + (video.watchMinutes || 0),
+                    0
+                ),
+                watch_hours: Number(
+                    (
+                        userVideos.reduce(
+                            (sum, video) => sum + (video.watchMinutes || 0),
+                            0
+                        ) / 60
+                    ).toFixed(2)
+                ),
+                earnings: Number(
+                    userVideos.reduce(
+                        (sum, video) => sum + Number(video.earnings || 0),
+                        0
+                    ).toFixed(2)
+                ),
+                monetization: {
+                    eligible:
+                        (user.subscribers || 0) >= 1000 &&
+                        userVideos.reduce(
+                            (sum, video) => sum + (video.watchMinutes || 0),
+                            0
+                        ) >= 240000,
+                    subscribersRequired: 1000,
+                    watchHoursRequired: 4000
+                },
                 videos: userVideos.length,
                 totalViews,
                 totalLikes,
