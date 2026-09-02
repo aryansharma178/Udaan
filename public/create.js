@@ -1,131 +1,181 @@
-const cameraSection = document.getElementById("cameraSection");
 const cameraPreview = document.getElementById("cameraPreview");
-const cameraTitle = document.getElementById("cameraTitle");
 const cameraMessage = document.getElementById("cameraMessage");
+
 const recordBtn = document.getElementById("recordBtn");
 const switchCameraBtn = document.getElementById("switchCameraBtn");
+
+const timerBtn = document.getElementById("timerBtn");
+const durationBtn = document.getElementById("durationBtn");
+const effectsBtn = document.getElementById("effectsBtn");
+const zoomBtn = document.getElementById("zoomBtn");
+const cameraFocusBtn = document.getElementById("cameraFocusBtn");
+const moreBtn = document.getElementById("moreBtn");
+const soundBtn = document.getElementById("soundBtn");
+const aiBtn = document.getElementById("aiBtn");
+const addMediaBtn = document.getElementById("addMediaBtn");
+
 const recordingBadge = document.getElementById("recordingBadge");
 const timerEl = document.getElementById("timer");
+
 const recordedPreview = document.getElementById("recordedPreview");
 const recordedVideo = document.getElementById("recordedVideo");
+const publishBtn = document.getElementById("publishBtn");
+const closeRecordedBtn = document.getElementById("closeRecordedBtn");
+
+const modeButtons = document.querySelectorAll(".mode-btn");
 
 let cameraStream = null;
 let mediaRecorder = null;
 let recordedChunks = [];
+
 let facingMode = "user";
+let currentMode = "live";
+
 let recordTimer = null;
 let recordSeconds = 0;
-let currentMode = "video";
+
 let recordedBlob = null;
+let selectedDuration = 15;
+let selectedZoom = 1;
 
-async function openCamera(mode) {
-    currentMode = mode;
 
-    cameraSection.classList.remove("hidden");
-    recordedPreview.classList.add("hidden");
-
-    cameraTitle.textContent =
-        mode === "short" ? "Create Short" : "Record Video";
-
-    cameraMessage.textContent = "Camera starting...";
-
-    try {
-        await startCamera();
-        cameraMessage.textContent = "";
-    } catch (error) {
-        console.error("Camera error:", error);
-        cameraMessage.textContent =
-            "❌ Camera permission denied or camera unavailable.";
-    }
-}
+/* =========================
+   CAMERA
+========================= */
 
 async function startCamera() {
+
     stopCamera();
 
-    const constraints = {
-        video: {
-            facingMode: { ideal: facingMode },
-            width: { ideal: 1920 },
-            height: { ideal: currentMode === "short" ? 1920 : 1080 }
-        },
-        audio: true
-    };
+    try {
 
-    cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        cameraMessage.textContent = "Camera starting...";
 
-    cameraPreview.srcObject = cameraStream;
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: {
+                    ideal: facingMode
+                },
+                width: {
+                    ideal: 1920
+                },
+                height: {
+                    ideal: 1080
+                }
+            },
+            audio: true
+        });
+
+        cameraPreview.srcObject = cameraStream;
+
+        await cameraPreview.play();
+
+        cameraMessage.textContent = "";
+
+    } catch (error) {
+
+        console.error("Camera error:", error);
+
+        cameraMessage.textContent =
+            "Camera permission denied or camera unavailable.";
+
+    }
 }
+
 
 function stopCamera() {
-    if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        cameraStream = null;
-    }
+
+    if (!cameraStream) return;
+
+    cameraStream.getTracks().forEach(track => {
+        track.stop();
+    });
+
+    cameraStream = null;
 }
+
+
+/* =========================
+   SWITCH CAMERA
+========================= */
 
 async function switchCamera() {
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-        cameraMessage.textContent = "Recording ke dauran camera switch nahi kar sakte.";
-        return;
-    }
 
-    facingMode = facingMode === "user" ? "environment" : "user";
+    facingMode =
+        facingMode === "user"
+            ? "environment"
+            : "user";
 
-    try {
-        await startCamera();
-    } catch (error) {
-        console.error("Camera switch failed:", error);
-        cameraMessage.textContent = "❌ Camera switch failed.";
-    }
+    await startCamera();
 }
 
-function getSupportedMimeType() {
+
+switchCameraBtn?.addEventListener(
+    "click",
+    switchCamera
+);
+
+
+/* =========================
+   RECORD
+========================= */
+
+function getRecorderOptions() {
+
     const types = [
         "video/webm;codecs=vp9,opus",
         "video/webm;codecs=vp8,opus",
-        "video/webm",
-        "video/mp4"
+        "video/webm"
     ];
 
     for (const type of types) {
-        if (MediaRecorder.isTypeSupported(type)) {
-            return type;
+
+        if (
+            window.MediaRecorder &&
+            MediaRecorder.isTypeSupported(type)
+        ) {
+            return {
+                mimeType: type
+            };
         }
     }
 
-    return "";
+    return {};
 }
 
-function toggleRecording() {
+
+function startRecording() {
+
     if (!cameraStream) {
-        cameraMessage.textContent = "Camera available nahi hai.";
+
+        cameraMessage.textContent =
+            "Camera is not ready.";
+
         return;
     }
 
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-        stopRecording();
-    } else {
-        startRecording();
-    }
-}
-
-function startRecording() {
     recordedChunks = [];
-    recordedBlob = null;
-
-    const mimeType = getSupportedMimeType();
 
     try {
-        mediaRecorder = mimeType
-            ? new MediaRecorder(cameraStream, { mimeType })
-            : new MediaRecorder(cameraStream);
+
+        mediaRecorder =
+            new MediaRecorder(
+                cameraStream,
+                getRecorderOptions()
+            );
+
     } catch (error) {
-        console.error("MediaRecorder error:", error);
-        cameraMessage.textContent = "❌ Recording supported nahi hai.";
+
+        console.error(error);
+
+        cameraMessage.textContent =
+            "Recording is not supported on this device.";
+
         return;
     }
 
     mediaRecorder.ondataavailable = event => {
+
         if (event.data && event.data.size > 0) {
             recordedChunks.push(event.data);
         }
@@ -133,181 +183,499 @@ function startRecording() {
 
     mediaRecorder.onstop = finishRecording;
 
-    mediaRecorder.start(1000);
+    mediaRecorder.start(500);
 
     recordSeconds = 0;
+
     updateTimer();
 
     recordTimer = setInterval(() => {
+
         recordSeconds++;
+
         updateTimer();
+
+        /* Short 15 second limit */
+
+        if (
+            currentMode === "short" &&
+            recordSeconds >= selectedDuration
+        ) {
+            stopRecording();
+        }
+
     }, 1000);
 
+    recordBtn.classList.add("recording");
+
     recordingBadge.classList.remove("hidden");
-    recordBtn.textContent = "⏹";
-    cameraMessage.textContent = "Recording...";
 }
+
 
 function stopRecording() {
-    if (!mediaRecorder) return;
 
-    if (mediaRecorder.state !== "inactive") {
+    if (
+        mediaRecorder &&
+        mediaRecorder.state !== "inactive"
+    ) {
         mediaRecorder.stop();
     }
 
     clearInterval(recordTimer);
     recordTimer = null;
+
+    recordBtn.classList.remove("recording");
 
     recordingBadge.classList.add("hidden");
-    recordBtn.textContent = "⏺";
-    cameraMessage.textContent = "Recording complete.";
 }
 
-function finishRecording() {
-    const mimeType =
-        mediaRecorder && mediaRecorder.mimeType
-            ? mediaRecorder.mimeType
-            : "video/webm";
 
-    recordedBlob = new Blob(recordedChunks, {
-        type: mimeType
-    });
+function toggleRecording() {
 
-    const videoUrl = URL.createObjectURL(recordedBlob);
+    if (
+        mediaRecorder &&
+        mediaRecorder.state === "recording"
+    ) {
 
-    recordedVideo.src = videoUrl;
-    recordedPreview.classList.remove("hidden");
+        stopRecording();
 
-    cameraMessage.textContent =
-        "✅ Video ready. Preview karke publish karein.";
+    } else {
 
-    recordedVideo.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
+        startRecording();
+
+    }
 }
+
+
+recordBtn?.addEventListener(
+    "click",
+    toggleRecording
+);
+
+
+/* =========================
+   TIMER
+========================= */
 
 function updateTimer() {
-    const minutes = Math.floor(recordSeconds / 60);
-    const seconds = recordSeconds % 60;
+
+    const minutes =
+        Math.floor(recordSeconds / 60)
+            .toString()
+            .padStart(2, "0");
+
+    const seconds =
+        (recordSeconds % 60)
+            .toString()
+            .padStart(2, "0");
 
     timerEl.textContent =
-        String(minutes).padStart(2, "0") +
-        ":" +
-        String(seconds).padStart(2, "0");
+        `${minutes}:${seconds}`;
 }
 
-function closeCamera() {
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-        mediaRecorder.stop();
+
+/* =========================
+   FINISH RECORDING
+========================= */
+
+function finishRecording() {
+
+    if (!recordedChunks.length) {
+        return;
     }
 
-    clearInterval(recordTimer);
-    recordTimer = null;
+    recordedBlob =
+        new Blob(
+            recordedChunks,
+            {
+                type: "video/webm"
+            }
+        );
+
+    const url =
+        URL.createObjectURL(recordedBlob);
+
+    recordedVideo.src = url;
+
+    recordedPreview.classList.remove(
+        "hidden"
+    );
 
     stopCamera();
-
-    cameraPreview.srcObject = null;
-    cameraSection.classList.add("hidden");
-    recordedPreview.classList.add("hidden");
-    cameraMessage.textContent = "";
 }
 
-async function publishRecordedVideo() {
-    if (!recordedBlob) {
-        cameraMessage.textContent = "Pehle video record karein.";
-        return;
-    }
 
-    const token = localStorage.getItem("udaan_token");
+/* =========================
+   PUBLISH
+========================= */
 
-    if (!token) {
-        cameraMessage.textContent =
-            "❌ Please login again before publishing.";
-        return;
-    }
+publishBtn?.addEventListener(
+    "click",
+    async () => {
 
-    const extension =
-        recordedBlob.type.includes("mp4") ? "mp4" : "webm";
-
-    const file = new File(
-        [recordedBlob],
-        `udaan-${Date.now()}.${extension}`,
-        {
-            type: recordedBlob.type
+        if (!recordedBlob) {
+            return;
         }
-    );
 
-    const formData = new FormData();
+        const formData =
+            new FormData();
 
-    formData.append("video", file);
-    formData.append(
-        "title",
-        currentMode === "short"
-            ? "My UDAAN Short"
-            : "My UDAAN Video"
-    );
-    formData.append(
-        "description",
-        "Created with UDAAN Camera"
-    );
-    formData.append("category", "Other");
-    formData.append(
-        "isShort",
-        currentMode === "short" ? "true" : "false"
-    );
-
-    const publishBtn = document.getElementById("publishBtn");
-
-    publishBtn.disabled = true;
-    publishBtn.textContent = "Uploading... ⏳";
-    cameraMessage.textContent =
-        "Video UDAAN par upload ho raha hai...";
-
-    try {
-        const response = await fetch("/api/videos/upload", {
-            method: "POST",
-            headers: {
-                Authorization: "Bearer " + token
-            },
-            body: formData
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(
-                result.message || "Upload failed"
+        const title =
+            prompt(
+                "Enter video title:"
             );
+
+        if (!title) {
+            return;
         }
 
-        cameraMessage.textContent =
-            "✅ Video successfully published! 🚀";
+        formData.append(
+            "video",
+            recordedBlob,
+            "udaan-recording.webm"
+        );
 
-        publishBtn.textContent = "✅ Published";
+        formData.append(
+            "title",
+            title
+        );
 
-        setTimeout(() => {
-            window.location.href = "/home.html";
-        }, 1200);
+        formData.append(
+            "isShort",
+            currentMode === "short"
+                ? "true"
+                : "false"
+        );
 
-    } catch (error) {
-        console.error("Publish error:", error);
-
-        cameraMessage.textContent =
-            "❌ " + error.message;
-
-        publishBtn.disabled = false;
+        publishBtn.disabled = true;
         publishBtn.textContent =
-            "🚀 Continue to Publish";
+            "Uploading...";
+
+        try {
+
+            const token =
+                localStorage.getItem(
+                    "token"
+                );
+
+            const response =
+                await fetch(
+                    "/api/videos/upload",
+                    {
+                        method: "POST",
+                        headers: token
+                            ? {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                            : {},
+                        body: formData
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message ||
+                    "Upload failed"
+                );
+            }
+
+            alert(
+                "Video uploaded successfully!"
+            );
+
+            location.href =
+                "/home.html";
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                error.message ||
+                "Upload failed."
+            );
+
+            publishBtn.disabled = false;
+            publishBtn.textContent =
+                "Continue to Publish";
+        }
+
     }
-}
+);
 
-window.openCamera = openCamera;
-window.closeCamera = closeCamera;
-window.switchCamera = switchCamera;
-window.toggleRecording = toggleRecording;
-window.publishRecordedVideo = publishRecordedVideo;
 
-window.addEventListener("beforeunload", () => {
-    stopCamera();
+/* =========================
+   CLOSE PREVIEW
+========================= */
+
+closeRecordedBtn?.addEventListener(
+    "click",
+    () => {
+
+        recordedPreview.classList.add(
+            "hidden"
+        );
+
+        recordedVideo.pause();
+
+        startCamera();
+    }
+);
+
+
+/* =========================
+   MODES
+========================= */
+
+modeButtons.forEach(button => {
+
+    button.addEventListener(
+        "click",
+        async () => {
+
+            const mode =
+                button.dataset.mode;
+
+            currentMode = mode;
+
+            modeButtons.forEach(btn =>
+                btn.classList.remove(
+                    "active"
+                )
+            );
+
+            button.classList.add(
+                "active"
+            );
+
+            if (mode === "live") {
+
+                stopCamera();
+
+                location.href =
+                    "/live.html";
+
+                return;
+            }
+
+            if (mode === "post") {
+
+                location.href =
+                    "/upload.html";
+
+                return;
+            }
+
+            await startCamera();
+        }
+    );
 });
+
+
+/* =========================
+   DURATION
+========================= */
+
+durationBtn?.addEventListener(
+    "click",
+    () => {
+
+        selectedDuration =
+            selectedDuration === 15
+                ? 30
+                : selectedDuration === 30
+                    ? 60
+                    : 15;
+
+        durationBtn.textContent =
+            `${selectedDuration}s`;
+    }
+);
+
+
+/* =========================
+   ZOOM
+========================= */
+
+zoomBtn?.addEventListener(
+    "click",
+    () => {
+
+        selectedZoom =
+            selectedZoom === 1
+                ? 2
+                : selectedZoom === 2
+                    ? 3
+                    : 1;
+
+        zoomBtn.textContent =
+            `${selectedZoom}x`;
+
+        cameraPreview.style.transform =
+            `scale(${selectedZoom})`;
+    }
+);
+
+
+/* =========================
+   TIMER BUTTON
+========================= */
+
+timerBtn?.addEventListener(
+    "click",
+    () => {
+
+        const value =
+            prompt(
+                "Timer seconds:",
+                "3"
+            );
+
+        if (value !== null) {
+
+            timerBtn.innerHTML =
+                `<span>◷</span><small>${value}s</small>`;
+        }
+    }
+);
+
+
+/* =========================
+   EFFECTS
+========================= */
+
+effectsBtn?.addEventListener(
+    "click",
+    () => {
+
+        alert(
+            "Effects panel coming soon."
+        );
+    }
+);
+
+
+/* =========================
+   AI
+========================= */
+
+aiBtn?.addEventListener(
+    "click",
+    () => {
+
+        alert(
+            "UDAAN AI tools coming soon."
+        );
+    }
+);
+
+
+/* =========================
+   SOUND
+========================= */
+
+soundBtn?.addEventListener(
+    "click",
+    () => {
+
+        alert(
+            "Sound library coming soon."
+        );
+    }
+);
+
+
+/* =========================
+   MORE
+========================= */
+
+moreBtn?.addEventListener(
+    "click",
+    () => {
+
+        alert(
+            "More camera tools coming soon."
+        );
+    }
+);
+
+
+/* =========================
+   ADD MEDIA
+========================= */
+
+addMediaBtn?.addEventListener(
+    "click",
+    () => {
+
+        const input =
+            document.createElement(
+                "input"
+            );
+
+        input.type = "file";
+        input.accept =
+            "video/*,image/*";
+
+        input.onchange = () => {
+
+            if (input.files.length) {
+
+                cameraMessage.textContent =
+                    `${input.files[0].name} selected`;
+            }
+        };
+
+        input.click();
+    }
+);
+
+
+/* =========================
+   PAGE START
+========================= */
+
+window.addEventListener(
+    "load",
+    async () => {
+
+        /*
+         * Create screen opens in Live mode
+         * according to the requested design.
+         */
+
+        currentMode = "live";
+
+        /*
+         * We don't start the camera automatically
+         * on page load because browsers require
+         * user interaction for reliable permission.
+         *
+         * Camera starts when Video/Short is selected.
+         */
+    }
+);
+
+
+/* =========================
+   CLEANUP
+========================= */
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        if (
+            mediaRecorder &&
+            mediaRecorder.state !== "inactive"
+        ) {
+            mediaRecorder.stop();
+        }
+
+        stopCamera();
+    }
+);
