@@ -232,6 +232,18 @@ function stopRecording() {
 
 function toggleRecording() {
 
+    /* LIVE mode: never use MediaRecorder.
+       Open the real Live Streaming screen. */
+
+    if (currentMode === "live") {
+
+        stopCamera();
+
+        location.href = "/live.html";
+
+        return;
+    }
+
     if (
         mediaRecorder &&
         mediaRecorder.state === "recording"
