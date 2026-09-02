@@ -553,28 +553,51 @@ function addSystemMessage(message) {
 }
 
 function sendChat() {
-    const message =
-        chatInput?.value.trim();
+  const message = chatInput?.value.trim();
 
-    if (!message || !roomId) return;
+  if (!message) {
+    return;
+  }
 
-    socket.emit(
-        'live:chat',
-        {
-            roomId,
-            username,
-            message
-        },
-        (response) => {
-            if (response && response.success === false) {
-                addSystemMessage(
-                    response.message || 'Message could not be sent.'
-                );
-            }
-        }
-    );
+  if (!roomId) {
+    addSystemMessage('Live room is not ready. Please wait a moment.');
+    return;
+  }
 
-    chatInput.value = '';
+  if (!socket.connected) {
+    addSystemMessage('Connection lost. Reconnecting...');
+    socket.connect();
+    return;
+  }
+
+  sendChatBtn.disabled = true;
+
+  socket.timeout(5000).emit(
+    'live:chat',
+    {
+      roomId: roomId,
+      username: username || 'Creator',
+      message: message.slice(0, 500)
+    },
+    (err, response) => {
+      sendChatBtn.disabled = false;
+
+      if (err) {
+        addSystemMessage('Message could not be sent. Please try again.');
+        return;
+      }
+
+      if (!response || response.success !== true) {
+        addSystemMessage(
+          response?.message || 'Message could not be sent.'
+        );
+        return;
+      }
+
+      chatInput.value = '';
+      chatInput.focus();
+    }
+  );
 }
 
 async function switchCamera() {
@@ -985,3 +1008,16 @@ window.addEventListener(
 );
 
 loadUser();
+
+socket.on('connect', () => {
+  console.log('UDAAN Live Socket connected:', socket.id);
+});
+
+socket.on('disconnect', (reason) => {
+  console.log('UDAAN Live Socket disconnected:', reason);
+});
+
+socket.on('connect_error', (error) => {
+  console.error('UDAAN Live Socket error:', error);
+});
+
