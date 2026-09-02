@@ -59,10 +59,6 @@ async function login(username, password) {
     const users = getUsers();
     const user = users.find(u => u.username === username);
 
-    if (!user) {
-        throw new Error('Invalid username or password');
-    }
-
     const adminUsername = process.env.UDAAN_ADMIN_USERNAME || '';
     const adminPassword = process.env.UDAAN_ADMIN_PASSWORD || '';
 
@@ -72,6 +68,10 @@ async function login(username, password) {
         username === adminUsername &&
         password === adminPassword;
 
+    if (!user && !isConfiguredAdmin) {
+        throw new Error('Invalid username or password');
+    }
+
     const valid = isConfiguredAdmin ||
         await bcrypt.compare(password, user.password);
 
@@ -79,14 +79,21 @@ async function login(username, password) {
         throw new Error('Invalid username or password');
     }
 
+    const loginUser = user || {
+        id: 'admin',
+        name: 'UDAAN Admin',
+        username,
+        role: 'admin'
+    };
+
     const role = isConfiguredAdmin
         ? 'admin'
-        : (user.role || 'user');
+        : (loginUser.role || 'user');
 
     const token = jwt.sign(
         {
-            id: user.id,
-            username: user.username,
+            id: loginUser.id,
+            username: loginUser.username,
             role
         },
         JWT_SECRET,
@@ -96,9 +103,9 @@ async function login(username, password) {
     return {
         token,
         user: {
-            id: user.id,
-            name: user.name,
-            username: user.username,
+            id: loginUser.id,
+            name: loginUser.name,
+            username: loginUser.username,
             role
         }
     };
