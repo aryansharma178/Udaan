@@ -1054,7 +1054,12 @@ function renderNotifications() {
                     await fetch(
                         `/api/notifications/${encodeURIComponent(user.username)}/${encodeURIComponent(notificationId)}/read`,
                         {
-                            method: 'POST'
+                            method: 'POST',
+                              headers: {
+                                  'Authorization': 'Bearer ' + (
+                                      localStorage.getItem('udaan_token') || ''
+                                  )
+                              },
                         }
                     );
 
@@ -1111,7 +1116,13 @@ async function loadNotifications() {
 
         const response = await fetch(
             `/api/notifications/${encodeURIComponent(user.username)}`
-        );
+              , {
+                  headers: {
+                      'Authorization': 'Bearer ' + (
+                          localStorage.getItem('udaan_token') || ''
+                      )
+                  }
+              });
 
         if (!response.ok) {
             throw new Error(
@@ -1173,7 +1184,12 @@ async function markAllNotificationsAsRead() {
                 fetch(
                     `/api/notifications/${encodeURIComponent(user.username)}/${encodeURIComponent(notification.id)}/read`,
                     {
-                        method: 'POST'
+                        method: 'POST',
+                          headers: {
+                              'Authorization': 'Bearer ' + (
+                                  localStorage.getItem('udaan_token') || ''
+                              )
+                          },
                     }
                 )
             )

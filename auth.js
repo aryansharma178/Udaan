@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const USERS_FILE = './users.json';
-const JWT_SECRET = 'UDAAN_SECRET_CHANGE_THIS_LATER';
+const JWT_SECRET = process.env.JWT_SECRET || 'UDAAN_SECRET_CHANGE_THIS_LATER';
 
 let usersCache = null;
 

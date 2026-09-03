@@ -57,7 +57,7 @@ async function loadUser() {
             }
         });
 
-        if (!response.success) return;
+        if (!response.ok) return;
 
         const data = await response.json();
 

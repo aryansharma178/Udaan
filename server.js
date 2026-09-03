@@ -513,10 +513,18 @@ app.get('/api/users', (req, res) => {
 
 
 // Mark one notification as read
-app.post('/api/notifications/:username/:id/read', (req, res) => {
+app.post('/api/notifications/:username/:id/read', requireAuth, (req, res) => {
     try {
         const username = String(req.params.username || '').trim();
         const id = String(req.params.id || '').trim();
+        const authenticatedUsername = String(req.user?.username || '').trim();
+
+        if (!authenticatedUsername || username !== authenticatedUsername) {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only access your own notifications'
+            });
+        }
         const file = './notifications.json';
 
         if (!username || !id) {
@@ -560,9 +568,18 @@ app.post('/api/notifications/:username/:id/read', (req, res) => {
     }
 });
 
-app.get('/api/notifications/:username', (req, res) => {
+app.get('/api/notifications/:username', requireAuth, (req, res) => {
     try {
         const username = String(req.params.username || '').trim();
+        const authenticatedUsername = String(req.user?.username || '').trim();
+
+        if (!authenticatedUsername || username !== authenticatedUsername) {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only access your own notifications'
+            });
+        }
+
         const file = './notifications.json';
 
         const notifications = getNotifications();
@@ -1366,6 +1383,30 @@ app.get('/api/admin/errors', requireAuth, (req, res) => {
  * UDAAN LIVE STREAMING - SOCKET.IO FOUNDATION
  * ===================================================== */
 
+app.get('/api/live', (req, res) => {
+    try {
+        const activeLives = Array.from(liveRooms.values())
+            .map(room => ({
+                roomId: room.roomId,
+                host: room.host,
+                title: room.title,
+                viewers: room.viewers || 0,
+                createdAt: room.createdAt
+            }));
+
+        res.json({
+            success: true,
+            lives: activeLives
+        });
+    } catch (error) {
+        console.error('Active live API error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Unable to load active lives'
+        });
+    }
+});
+
 const liveRooms = new Map();
 
 io.on('connection', (socket) => {
@@ -1396,6 +1437,41 @@ io.on('connection', (socket) => {
             };
 
             liveRooms.set(roomId, room);
+
+            // Notify existing subscribers using the existing notification system.
+            try {
+                const subscriptionsFile = './subscriptions.json';
+
+                if (fs.existsSync(subscriptionsFile)) {
+                    const subscriptions = JSON.parse(
+                        fs.readFileSync(subscriptionsFile, 'utf8')
+                    );
+
+                    const subscribers = subscriptions
+                        .filter(s => s.creator === username)
+                        .map(s => String(s.subscriber || '').trim())
+                        .filter(Boolean);
+
+                    for (const subscriber of [...new Set(subscribers)]) {
+                        addNotification({
+                            id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                            recipient: subscriber,
+                            type: 'live_start',
+                            from: username,
+                            message: `${username} is live now: ${room.title}`,
+                            liveRoomId: roomId,
+                            liveUrl: `/live.html?room=${encodeURIComponent(roomId)}`,
+                            read: false,
+                            created_at: new Date().toISOString()
+                        });
+                    }
+                }
+            } catch (notificationError) {
+                console.error(
+                    'Live notification error:',
+                    notificationError
+                );
+            }
 
             socket.join(roomId);
             socket.data.liveRoom = roomId;

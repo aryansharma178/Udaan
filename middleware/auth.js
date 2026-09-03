@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = 'UDAAN_SECRET_CHANGE_THIS_LATER';
+const JWT_SECRET = process.env.JWT_SECRET || 'UDAAN_SECRET_CHANGE_THIS_LATER';
 
 function requireAuth(req, res, next) {
     try {

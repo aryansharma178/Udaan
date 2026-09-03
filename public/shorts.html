@@ -536,10 +536,48 @@ function setupShortsPlayback() {
     items.forEach(item => observer.observe(item));
 }
 
+async function updateShortSubscribeButton(button) {
+    const creator = button?.dataset?.username;
+    const user = getCurrentUser();
+
+    if (!button || !creator) return;
+
+    if (!user?.username) {
+        button.textContent = 'Subscribe';
+        button.dataset.subscribed = 'false';
+        return;
+    }
+
+    if (creator === user.username) {
+        button.textContent = 'Your Profile';
+        button.disabled = true;
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `/api/profile/${encodeURIComponent(creator)}/subscription-status?subscriber=${encodeURIComponent(user.username)}`
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || 'Subscription status failed');
+        }
+
+        const subscribed = result.subscribed === true;
+
+        button.dataset.subscribed = subscribed ? 'true' : 'false';
+        button.textContent = subscribed ? 'Subscribed ✓' : 'Subscribe';
+    } catch (error) {
+        console.error('Short subscription status error:', error);
+        button.textContent = 'Subscribe';
+        button.dataset.subscribed = 'false';
+    }
+}
+
 function setupCreatorActions() {
-
     document.querySelectorAll('.short-creator-name, .short-avatar').forEach(element => {
-
         element.addEventListener('click', event => {
             event.stopPropagation();
 
@@ -555,8 +593,9 @@ function setupCreatorActions() {
     });
 
     document.querySelectorAll('.subscribe-btn').forEach(button => {
+        updateShortSubscribeButton(button);
 
-        button.addEventListener('click', event => {
+        button.addEventListener('click', async event => {
             event.stopPropagation();
 
             const user = getCurrentUser();
@@ -568,12 +607,60 @@ function setupCreatorActions() {
 
             const creator = button.dataset.username;
 
+            if (!creator) {
+                showToast('Creator not found.');
+                return;
+            }
+
             if (creator === user.username) {
                 showToast('You cannot subscribe to yourself.');
                 return;
             }
 
-            showToast('Subscribe system next step mein connect karenge.');
+            const isSubscribed = button.dataset.subscribed === 'true';
+
+            button.disabled = true;
+
+            try {
+                const endpoint = isSubscribed
+                    ? `/api/profile/${encodeURIComponent(creator)}/unsubscribe`
+                    : `/api/profile/${encodeURIComponent(creator)}/subscribe`;
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        subscriber: user.username
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Subscription failed');
+                }
+
+                button.dataset.subscribed =
+                    result.subscribed ? 'true' : 'false';
+
+                button.textContent =
+                    result.subscribed
+                        ? 'Subscribed ✓'
+                        : 'Subscribe';
+
+                showToast(
+                    result.subscribed
+                        ? 'Subscribed successfully 🔔'
+                        : 'Unsubscribed'
+                );
+            } catch (error) {
+                console.error('Short subscribe error:', error);
+                showToast(error.message || 'Subscription failed');
+            } finally {
+                button.disabled = false;
+            }
         });
     });
 }

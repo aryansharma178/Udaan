@@ -192,6 +192,191 @@ function videoMatches(
    LOAD VIDEO
    ===================================================== */
 
+
+/* =====================================================
+   VIEW / WATCH-TIME TRACKING
+===================================================== */
+
+let viewTracked = false;
+let lastTrackedTime = 0;
+let watchSecondsPending = 0;
+let watchSendInProgress = false;
+
+function getWatchToken() {
+    return localStorage.getItem('udaan_token') || '';
+}
+
+async function trackVideoView() {
+    if (!currentVideo?.id || viewTracked) return;
+
+    viewTracked = true;
+
+    try {
+        const response = await fetch(
+            `/api/videos/${encodeURIComponent(currentVideo.id)}/view`,
+            { method: 'POST' }
+        );
+
+        if (!response.ok) {
+            throw new Error('View tracking failed: ' + response.status);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+            currentVideo.views = result.views ?? currentVideo.views ?? 0;
+
+            const stats = document.getElementById('videoStats');
+
+            if (stats) {
+                stats.textContent =
+                    `${currentVideo.views || 0} views • ${currentVideo.likes || 0} likes`;
+            }
+        }
+    } catch (error) {
+        console.error('View tracking error:', error);
+        viewTracked = false;
+    }
+}
+
+async function sendWatchTime(seconds) {
+    if (!currentVideo?.id || seconds <= 0 || watchSendInProgress) {
+        return;
+    }
+
+    const token = getWatchToken();
+
+    if (!token) return;
+
+    watchSendInProgress = true;
+
+    try {
+        const response = await fetch(
+            `/api/videos/${encodeURIComponent(currentVideo.id)}/watch`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    seconds: Math.min(Math.max(Number(seconds) || 0, 0), 30)
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('Watch tracking failed: ' + response.status);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+            currentVideo.watchSeconds =
+                result.watchSeconds ?? currentVideo.watchSeconds ?? 0;
+
+            currentVideo.watchMinutes =
+                result.watchMinutes ?? currentVideo.watchMinutes ?? 0;
+
+            currentVideo.earnings =
+                result.earnings ?? currentVideo.earnings ?? 0;
+        }
+    } catch (error) {
+        console.error('Watch-time tracking error:', error);
+    } finally {
+        watchSendInProgress = false;
+    }
+}
+
+async function flushWatchTime() {
+    if (watchSecondsPending <= 0 || watchSendInProgress) {
+        return;
+    }
+
+    const seconds = Math.min(watchSecondsPending, 30);
+    watchSecondsPending -= seconds;
+
+    await sendWatchTime(seconds);
+}
+
+video.addEventListener('play', () => {
+    lastTrackedTime = Number(video.currentTime) || 0;
+});
+
+video.addEventListener('timeupdate', () => {
+    if (video.paused || video.ended) return;
+
+    const now = Number(video.currentTime);
+
+    if (!Number.isFinite(now)) return;
+
+    const delta = now - lastTrackedTime;
+
+    if (delta > 0 && delta <= 5) {
+        watchSecondsPending += delta;
+    }
+
+    lastTrackedTime = now;
+
+    if (watchSecondsPending >= 30) {
+        flushWatchTime();
+    }
+});
+
+video.addEventListener('pause', () => {
+    const now = Number(video.currentTime);
+
+    if (Number.isFinite(now)) {
+        const delta = now - lastTrackedTime;
+
+        if (delta > 0 && delta <= 5) {
+            watchSecondsPending += delta;
+        }
+
+        lastTrackedTime = now;
+    }
+
+    flushWatchTime();
+});
+
+video.addEventListener('ended', () => {
+    const now = Number(video.currentTime);
+
+    if (Number.isFinite(now)) {
+        const delta = now - lastTrackedTime;
+
+        if (delta > 0 && delta <= 5) {
+            watchSecondsPending += delta;
+        }
+
+        lastTrackedTime = now;
+    }
+
+    flushWatchTime();
+});
+
+window.addEventListener('beforeunload', () => {
+    if (watchSecondsPending <= 0) return;
+
+    const token = getWatchToken();
+
+    if (!token || !currentVideo?.id) return;
+
+    const payload = JSON.stringify({
+        seconds: Math.min(watchSecondsPending, 30)
+    });
+
+    navigator.sendBeacon(
+        `/api/videos/${encodeURIComponent(currentVideo.id)}/watch`,
+        new Blob([payload], {
+            type: 'application/json'
+        })
+    );
+
+    watchSecondsPending = 0;
+});
+
+
 async function loadVideo() {
 
     const id = getVideoId();
@@ -401,6 +586,13 @@ async function loadVideo() {
             videos,
             currentVideo.id
         );
+
+        viewTracked = false;
+        lastTrackedTime = Number(video.currentTime) || 0;
+        watchSecondsPending = 0;
+        watchSendInProgress = false;
+
+        trackVideoView();
 
     } catch (error) {
 
@@ -1128,7 +1320,13 @@ document.getElementById(
                         headers: {
                             'Content-Type':
                                 'application/json'
-                        }
+                        },
+                        body: JSON.stringify({
+                            username:
+                                JSON.parse(
+                                    localStorage.getItem('udaan_user') || '{}'
+                                ).username || ''
+                        })
                     }
                 );
 
@@ -1381,4 +1579,106 @@ document.addEventListener(
    START
    ===================================================== */
 
-loadVideo();
+/* =====================================================
+   WATCH PAGE SUBSCRIBE
+===================================================== */
+
+async function setupWatchSubscribe() {
+    const button = document.getElementById('subscribeBtn');
+
+    if (!button || !currentVideo?.username) return;
+
+    let user = null;
+
+    try {
+        const savedUser = localStorage.getItem('udaan_user');
+        user = savedUser ? JSON.parse(savedUser) : null;
+    } catch (error) {
+        console.error('Watch user parse error:', error);
+    }
+
+    const creator = String(currentVideo.username || '').trim();
+    const subscriber = String(user?.username || '').trim();
+
+    if (!subscriber) {
+        button.textContent = 'Subscribe';
+        button.dataset.subscribed = 'false';
+        button.onclick = () => {
+            alert('Please login to subscribe.');
+            location.href = '/index.html';
+        };
+        return;
+    }
+
+    if (subscriber === creator) {
+        button.textContent = 'Your Profile';
+        button.disabled = true;
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `/api/profile/${encodeURIComponent(creator)}/subscription-status?subscriber=${encodeURIComponent(subscriber)}`
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || 'Subscription status failed');
+        }
+
+        const subscribed = result.subscribed === true;
+
+        button.dataset.subscribed = subscribed ? 'true' : 'false';
+        button.textContent = subscribed ? 'Subscribed ✓' : 'Subscribe';
+    } catch (error) {
+        console.error('Watch subscription status error:', error);
+        button.dataset.subscribed = 'false';
+        button.textContent = 'Subscribe';
+    }
+
+    button.onclick = async () => {
+        const isSubscribed = button.dataset.subscribed === 'true';
+
+        button.disabled = true;
+
+        try {
+            const endpoint = isSubscribed
+                ? `/api/profile/${encodeURIComponent(creator)}/unsubscribe`
+                : `/api/profile/${encodeURIComponent(creator)}/subscribe`;
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    subscriber
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Subscription failed');
+            }
+
+            const subscribed = result.subscribed === true;
+
+            button.dataset.subscribed = subscribed ? 'true' : 'false';
+            button.textContent = subscribed ? 'Subscribed ✓' : 'Subscribe';
+        } catch (error) {
+            console.error('Watch subscribe error:', error);
+            alert(error.message || 'Unable to update subscription.');
+        } finally {
+            button.disabled = false;
+        }
+    };
+}
+
+
+loadVideo()
+    .then(() => setupWatchSubscribe())
+    .catch(error => {
+        console.error('UDAAN watch startup error:', error);
+    });
