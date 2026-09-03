@@ -93,7 +93,7 @@ app.get('/', (req, res) => {
 
 app.post('/api/signup', async (req, res) => {
     try {
-        const { name, username, password } = req.body;
+        const { name, username, password, email, country } = req.body;
 
         if (!name || !username || !password) {
             return res.status(400).json({
