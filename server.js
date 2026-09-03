@@ -636,6 +636,12 @@ app.get('/api/profile/:username', (req, res) => {
             video => video.username === user.username
         );
 
+        const liveRoom = typeof liveRooms !== 'undefined'
+            ? Array.from(liveRooms.values()).find(
+                room => room.host === user.username
+            )
+            : null;
+
         const totalViews = userVideos.reduce(
             (sum, video) => sum + (video.views || 0),
             0
@@ -652,6 +658,9 @@ app.get('/api/profile/:username', (req, res) => {
                 id: user.id,
                 name: user.name,
                 username: user.username,
+                isLive: !!liveRoom,
+                liveRoomId: liveRoom ? liveRoom.roomId : null,
+                liveTitle: liveRoom ? liveRoom.title : null,
                 profile_photo: user.profile_photo || null,
                 avatar: user.avatar || null,
                 subscribers: user.subscribers || 0,

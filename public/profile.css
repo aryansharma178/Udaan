@@ -1868,3 +1868,30 @@ body {
     font-weight: 400;
 }
 
+
+/* LIVE STATUS */
+.profile-live-badge {
+    position: absolute;
+    left: 50%;
+    bottom: -9px;
+    transform: translateX(-50%);
+    z-index: 7;
+    border: 2px solid #11101d;
+    border-radius: 999px;
+    padding: 5px 10px;
+    background: #e53935;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,.35);
+}
+
+.profile-live-badge[hidden] {
+    display: none;
+}
+
+.avatar-wrap.photo-active .profile-live-badge {
+    z-index: 8;
+}

@@ -25,6 +25,9 @@
         <div class="avatar-wrap profile-photo-wrap">
             <img id="profilePhoto" class="profile-photo" alt="Profile Photo">
             <div class="avatar" id="avatar">A</div>
+            <button type="button" id="liveBadge" class="profile-live-badge" hidden>
+                🔴 LIVE
+            </button>
 
             <button type="button" id="photoMenuBtn" class="photo-menu-btn" aria-label="Profile photo options">📷</button>
 
@@ -334,6 +337,22 @@ async function loadProfile() {
         document.getElementById("name").textContent = profile.name;
         document.getElementById("username").textContent =
             "@" + profile.username;
+
+        const liveBadge = document.getElementById("liveBadge");
+
+        if (liveBadge) {
+            liveBadge.hidden = !profile.isLive;
+
+            if (profile.isLive && profile.liveRoomId) {
+                liveBadge.onclick = () => {
+                    window.location.href =
+                        "/live.html?room=" +
+                        encodeURIComponent(profile.liveRoomId);
+                };
+            } else {
+                liveBadge.onclick = null;
+            }
+        }
 
         const savedAvatar = profile.avatar;
 

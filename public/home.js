@@ -950,6 +950,10 @@ function notificationIcon(notification) {
     if (notification.type === 'comment') {
         return '💬';
     }
+    if (notification.type === 'live_start') {
+        return '🔴';
+    }
+
 
     return '🔔';
 }
@@ -1075,6 +1079,14 @@ function renderNotifications() {
                     }
 
                     renderNotifications();
+
+                    if (
+                        notification?.type === 'live_start' &&
+                        notification.liveUrl
+                    ) {
+                        window.location.href = notification.liveUrl;
+                        return;
+                    }
 
                 } catch (error) {
 
