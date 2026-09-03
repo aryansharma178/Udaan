@@ -9,9 +9,13 @@
 
 <body>
 
-<header>
-    <button onclick="history.back()">←</button>
+<header class="design3-header">
+    <button class="design3-back" onclick="history.back()" aria-label="Back">←</button>
     <h2>Profile</h2>
+    <div class="design3-header-actions">
+        <button id="profileNotificationBtn" type="button" aria-label="Notifications">♧</button>
+        <button id="profileSettingsBtn" type="button" aria-label="Settings">⚙</button>
+    </div>
 </header>
 
 <main>
@@ -62,21 +66,32 @@
 
         <h1 id="name">Loading...</h1>
         <p id="username">@username</p>
-
         <button id="subscribeBtn" class="subscribe-btn">
             Subscribe
         </button>
 
-        <button id="logoutBtn" class="logout-btn" type="button" onclick="localStorage.removeItem('udaan_token'); localStorage.removeItem('udaan_user'); window.location.href='/index.html';">
-            Logout
+        <div class="design3-action-bar">
+            <button id="myProfileBtn" class="design3-action" type="button">
+                <span class="design3-icon user-icon">●</span>
+                <span>Your Profile</span>
+            </button>
+
+            <button id="editProfileBtn" class="design3-action" type="button">
+                <span class="design3-line-icon">⌁</span>
+                <span>Edit Profile</span>
+            </button>
+
+            <button id="logoutBtn" class="design3-action design3-logout" type="button">
+                <span class="design3-line-icon logout-line">⇥</span>
+                <span>Logout</span>
+            </button>
+        </div>
+
+        <button id="creatorStudioBtn" class="creator-studio-btn design3-studio" type="button">
+            <span class="studio-line-icon"></span>
+            <span>Creator Studio</span>
         </button>
 
-        <button id="editProfileBtn" class="edit-profile-btn">
-            ⚙️ Edit Profile
-        </button>
-        <button id="creatorStudioBtn" class="creator-studio-btn" type="button">
-            🚀 Creator Studio
-        </button>
 
         <div id="editProfilePanel" class="edit-profile-panel">
             <h3>Edit Profile</h3>
@@ -820,6 +835,7 @@ saveProfileBtn?.addEventListener("click", async () => {
 </script>
 
 <script src="/profile-final.js"></script>
+<script src="/profile-design3.js"></script>
 </body>
 </html>
 
