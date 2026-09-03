@@ -154,18 +154,33 @@ If you did not create this UDAAN account, you can ignore this email.
         }
     );
 
-    const result = await response.json();
+    const responseText = await response.text();
 
-    if (!response.ok) {
-        console.error(
-        'RESEND API ERROR:',
-        JSON.stringify(result, null, 2)
+    console.error(
+        'RESEND HTTP STATUS:',
+        response.status,
+        response.statusText
     );
 
+    console.error(
+        'RESEND RAW RESPONSE:',
+        responseText
+    );
+
+    let result = {};
+
+    try {
+        result = responseText ? JSON.parse(responseText) : {};
+    } catch {
+        result = { raw: responseText };
+    }
+
+    if (!response.ok) {
         throw new Error(
             result?.message ||
             result?.name ||
-            'Resend failed to send email'
+            result?.raw ||
+            `Resend HTTP ${response.status}`
         );
     }
 
