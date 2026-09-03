@@ -750,9 +750,23 @@ app.get('/api/following/:username', (req, res) => {
                 };
             });
 
+        const followingUsernames = new Set(
+            following.map(creator => creator.username)
+        );
+
+        const videosFile = './videos.json';
+        const videos = fs.existsSync(videosFile)
+            ? JSON.parse(fs.readFileSync(videosFile, 'utf8'))
+            : [];
+
+        const followingVideos = videos.filter(
+            video => followingUsernames.has(video.username)
+        );
+
         res.json({
             success: true,
-            following
+            creators: following,
+            videos: followingVideos
         });
 
     } catch (error) {
