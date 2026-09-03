@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>UDAAN Creator Studio</title>
+<link rel="stylesheet" href="/studio.css">
+</head>
+<body>
+
+<header class="studio-header">
+    <button onclick="history.back()">←</button>
+    <div>
+        <small>UDAAN</small>
+        <h1>Creator Studio</h1>
+    </div>
+    <a href="/profile.html">You</a>
+</header>
+
+<main>
+
+<section class="welcome">
+    <span>CREATOR DASHBOARD</span>
+    <h2 id="creatorName">Welcome, Creator 🚀</h2>
+    <p>Manage your content, analytics and monetization.</p>
+</section>
+
+<section class="quick-actions">
+    <a href="/upload.html">＋ Upload Video</a>
+    <a href="/create.html">＋ Create</a>
+    <a href="/live.html">🔴 Go Live</a>
+</section>
+
+<section class="money-card">
+    <div>
+        <small>MONETIZATION</small>
+        <h2>Monetization Progress</h2>
+        <p><b id="watchHours">0</b> / 4000 Watch Hours</p>
+        <p><b id="subscribers">0</b> / 1000 Subscribers</p>
+    </div>
+    <div class="progress" id="progress">0%</div>
+</section>
+
+<section>
+    <div class="section-title">
+        <h2>Overview</h2>
+        <button onclick="showAnalytics()">View Analytics →</button>
+    </div>
+
+    <div class="stats">
+        <div class="card purple"><b id="videos">0</b><span>Videos</span></div>
+        <div class="card blue"><b id="views">0</b><span>Views</span></div>
+        <div class="card pink"><b id="likes">0</b><span>Likes</span></div>
+        <div class="card gold"><b id="subs2">0</b><span>Subscribers</span></div>
+        <div class="card cyan"><b id="minutes">0</b><span>Watch Minutes</span></div>
+        <div class="card green"><b id="earnings">₹0.00</b><span>Earnings</span></div>
+    </div>
+</section>
+
+<section class="eligibility">
+    <b id="eligible">Not Eligible</b>
+    <span>Monetization</span>
+</section>
+
+<section id="analytics" class="analytics hidden">
+    <h2>📊 Analytics</h2>
+    <div class="analytics-row">
+        <div><span>Total Views</span><b id="aViews">0</b></div>
+        <div><span>Watch Hours</span><b id="aHours">0</b></div>
+        <div><span>Total Likes</span><b id="aLikes">0</b></div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="section-title">
+        <h2>Your Content</h2>
+        <a href="/upload.html">Upload →</a>
+    </div>
+    <div id="videoList">
+        <p class="loading">Loading your videos...</p>
+    </div>
+</section>
+
+</main>
+
+<nav class="bottom-nav">
+    <a href="/home.html">⌂<small>Home</small></a>
+    <a href="/shorts.html">◈<small>Shorts</small></a>
+    <a class="plus" href="/create.html">+</a>
+    <a href="/live.html">●<small>Live</small></a>
+    <a class="active" href="/studio.html">▣<small>Studio</small></a>
+</nav>
+
+<script src="/studio.js"></script>
+</body>
+</html>
