@@ -28,6 +28,87 @@ window.udaanVideoObserver = new IntersectionObserver((entries, observer) => {
     threshold: 0.01
 });
 
+
+/* =========================================
+   UDAAN ACTIVE LIVE - HOME
+   Uses existing /api/live rooms
+========================================= */
+async function loadActiveLives() {
+    const section = document.getElementById("liveNowSection");
+    const list = document.getElementById("liveNowList");
+
+    if (!section || !list) return;
+
+    try {
+        const response = await fetch("/api/live", {
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            section.classList.add("hidden");
+            return;
+        }
+
+        const result = await response.json();
+        const lives = Array.isArray(result.lives)
+            ? result.lives
+            : [];
+
+        if (!lives.length) {
+            section.classList.add("hidden");
+            list.innerHTML = "";
+            return;
+        }
+
+        section.classList.remove("hidden");
+        list.innerHTML = "";
+
+        lives.forEach(live => {
+            const card = document.createElement("article");
+            card.className = "live-now-card";
+
+            const username = String(live.host || "creator");
+            const title = String(live.title || "UDAAN Live");
+            const viewers = Number(live.viewers || 0);
+
+            const initial = username
+                .charAt(0)
+                .toUpperCase();
+
+            card.innerHTML = `
+                <div class="live-now-thumb">
+                    <div class="live-now-icon">🔴</div>
+                    <span class="live-now-label">LIVE</span>
+                    <span class="live-now-viewers">👁 ${viewers}</span>
+                </div>
+
+                <div class="live-now-info">
+                    <div class="live-now-avatar">${escapeHtml(initial)}</div>
+
+                    <div class="live-now-text">
+                        <strong>${escapeHtml(title)}</strong>
+                        <span>@${escapeHtml(username)}</span>
+                    </div>
+                </div>
+            `;
+
+            card.addEventListener("click", () => {
+                if (!live.roomId) return;
+
+                window.location.href =
+                    "/live.html?room=" +
+                    encodeURIComponent(live.roomId);
+            });
+
+            list.appendChild(card);
+        });
+
+    } catch (error) {
+        console.error("Active live load error:", error);
+        section.classList.add("hidden");
+    }
+}
+
 async function loadVideos() {
     try {
         const response = await fetch('/api/videos');
@@ -710,6 +791,7 @@ document.addEventListener('click', event => {
 });
 
 loadVideos();
+loadActiveLives();
 
 
 /* CREATOR SEARCH */

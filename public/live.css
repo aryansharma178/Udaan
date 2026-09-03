@@ -300,3 +300,30 @@ main {
         padding: 12px;
     }
 }
+
+/* UDAAN LIVE - Host self-camera PIP */
+#livePreview {
+    position: absolute;
+    width: 120px;
+    height: 170px;
+    right: 14px;
+    bottom: 88px;
+    z-index: 20;
+    object-fit: cover;
+    border-radius: 16px;
+    border: 2px solid rgba(255,255,255,.9);
+    box-shadow: 0 8px 30px rgba(0,0,0,.55);
+    background: #111;
+}
+
+/* Keep PIP comfortable on phones */
+@media (max-width: 600px) {
+    #livePreview {
+        width: 105px;
+        height: 150px;
+        right: 12px;
+        bottom: 82px;
+        border-radius: 14px;
+    }
+}
+
