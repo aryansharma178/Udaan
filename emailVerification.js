@@ -1,14 +1,20 @@
 const crypto = require('crypto');
 const fs = require('fs');
 
+const { sendEmail } = require('./email/mailer');
+
 const USERS_FILE = './users.json';
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 function loadUsers() {
-    if (!fs.existsSync(USERS_FILE)) return [];
+    if (!fs.existsSync(USERS_FILE)) {
+        return [];
+    }
 
     try {
-        return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+        return JSON.parse(
+            fs.readFileSync(USERS_FILE, 'utf8')
+        );
     } catch {
         return [];
     }
@@ -28,11 +34,106 @@ function hashToken(token) {
         .digest('hex');
 }
 
-async function sendVerificationEmail(user) {
-    if (!process.env.RESEND_API_KEY) {
-        throw new Error('RESEND_API_KEY is not configured');
-    }
+function getBaseUrl() {
+    return (
+        process.env.PUBLIC_BASE_URL ||
+        'https://udaan-ss5a.onrender.com'
+    ).replace(/\/+$/, '');
+}
 
+function getFromAddress() {
+    return (
+        process.env.EMAIL_FROM ||
+        process.env.RESEND_FROM ||
+        'UDAAN <onboarding@resend.dev>'
+    );
+}
+
+function createVerificationHtml({
+    username,
+    verifyUrl
+}) {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify your UDAAN email</title>
+</head>
+
+<body style="
+    margin:0;
+    padding:0;
+    background:#111111;
+    font-family:Arial,sans-serif;
+">
+
+<div style="
+    max-width:600px;
+    margin:40px auto;
+    background:#1b1425;
+    border-radius:20px;
+    padding:35px;
+    color:#ffffff;
+">
+
+<h1 style="
+    color:#ff8a00;
+    margin-top:0;
+">
+UDAAN 🚀
+</h1>
+
+<h2>
+Verify your email address
+</h2>
+
+<p style="
+    color:#cccccc;
+    font-size:16px;
+    line-height:1.6;
+">
+Hello ${username || 'Creator'}, welcome to UDAAN!
+Please verify your email address to secure your account.
+</p>
+
+<a href="${verifyUrl}" style="
+    display:inline-block;
+    padding:15px 28px;
+    background:#ff7a00;
+    color:#ffffff;
+    text-decoration:none;
+    border-radius:10px;
+    font-weight:bold;
+    margin:20px 0;
+">
+Verify Email
+</a>
+
+<p style="
+    color:#999999;
+    font-size:13px;
+">
+This verification link expires in 24 hours.
+</p>
+
+<p style="
+    color:#777777;
+    font-size:12px;
+">
+If you did not create this UDAAN account,
+you can safely ignore this email.
+</p>
+
+</div>
+
+</body>
+</html>
+`;
+}
+
+async function sendVerificationEmail(user) {
     const users = loadUsers();
 
     const current = users.find(
@@ -61,132 +162,22 @@ async function sendVerificationEmail(user) {
 
     saveUsers(users);
 
-    const baseUrl =
-        process.env.PUBLIC_BASE_URL ||
-        'https://udaan-ss5a.onrender.com';
-
     const verifyUrl =
-        `${baseUrl}/api/email/verify?token=${encodeURIComponent(rawToken)}`;
+        `${getBaseUrl()}/api/email/verify?token=${encodeURIComponent(rawToken)}`;
 
-    const from =
-        process.env.RESEND_FROM ||
-        'UDAAN <onboarding@resend.dev>';
+    const from = getFromAddress();
 
-    const html = `
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Verify your UDAAN email</title>
-</head>
+    const html = createVerificationHtml({
+        username: current.username,
+        verifyUrl
+    });
 
-<body style="
-    margin:0;
-    padding:0;
-    background:#111;
-    font-family:Arial,sans-serif;
-">
-
-<div style="
-    max-width:600px;
-    margin:40px auto;
-    background:#1b1425;
-    border-radius:20px;
-    padding:35px;
-    color:#fff;
-">
-
-<h1 style="color:#ff8a00;margin-top:0;">
-UDAAN 🚀
-</h1>
-
-<h2>Verify your email address</h2>
-
-<p style="color:#ccc;font-size:16px;line-height:1.6;">
-Welcome to UDAAN! Please verify your email address
-to secure your account.
-</p>
-
-<a href="${verifyUrl}"
-style="
-    display:inline-block;
-    padding:15px 28px;
-    background:#ff7a00;
-    color:#fff;
-    text-decoration:none;
-    border-radius:10px;
-    font-weight:bold;
-    margin:20px 0;
-">
-Verify Email
-</a>
-
-<p style="color:#999;font-size:13px;">
-This verification link expires in 24 hours.
-</p>
-
-<p style="color:#777;font-size:12px;">
-If you did not create this UDAAN account, you can ignore this email.
-</p>
-
-</div>
-
-</body>
-</html>
-`;
-
-    const response = await fetch(
-        'https://api.resend.com/emails',
-        {
-            method: 'POST',
-            headers: {
-                'Authorization':
-                    `Bearer ${process.env.RESEND_API_KEY}`,
-                'Content-Type':
-                    'application/json'
-            },
-            body: JSON.stringify({
-                from,
-                to: [current.email],
-                subject: 'Verify your UDAAN email 🚀',
-                html
-            })
-        }
-    );
-
-    const responseText = await response.text();
-
-    console.error(
-        'RESEND HTTP STATUS:',
-        response.status,
-        response.statusText
-    );
-
-    console.error(
-        'RESEND RAW RESPONSE:',
-        responseText
-    );
-
-    let result = {};
-
-    try {
-        result = responseText ? JSON.parse(responseText) : {};
-    } catch {
-        result = { raw: responseText };
-    }
-
-    if (!response.ok) {
-        throw new Error(
-            result?.message ||
-            result?.name ||
-            result?.raw ||
-            `Resend HTTP ${response.status}`
-        );
-    }
-
-    console.log(
-        `UDAAN verification email sent to ${current.email}. Resend ID: ${result.id || 'unknown'}`
-    );
+    await sendEmail({
+        from,
+        to: current.email,
+        subject: 'Verify your UDAAN email 🚀',
+        html
+    });
 
     return true;
 }
