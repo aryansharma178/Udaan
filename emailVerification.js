@@ -157,7 +157,10 @@ If you did not create this UDAAN account, you can ignore this email.
     const result = await response.json();
 
     if (!response.ok) {
-        console.error('Resend API error:', result);
+        console.error(
+        'RESEND API ERROR:',
+        JSON.stringify(result, null, 2)
+    );
 
         throw new Error(
             result?.message ||
