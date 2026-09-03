@@ -8,6 +8,10 @@ const multer = require('multer');
 const { logError, readErrors } = require('./errorMonitor');
 const { signup, login } = require('./auth');
 const {
+    sendVerificationEmail,
+    verifyEmail
+} = require('./emailVerification');
+const {
     getNotifications,
     saveNotifications
 } = require('./notificationsStore');
@@ -105,11 +109,31 @@ app.post('/api/signup', async (req, res) => {
             });
         }
 
-        const user = await signup(name, username, password);
+        const user = await signup(
+            name,
+            username,
+            password,
+            email || '',
+            country || ''
+        );
+
+        let verificationSent = false;
+
+        if (email) {
+            try {
+                await sendVerificationEmail(user);
+                verificationSent = true;
+            } catch (mailError) {
+                console.error('Verification email failed:', mailError.message);
+            }
+        }
 
         res.status(201).json({
             success: true,
-            message: "UDAAN account successfully created 🚀",
+            message: verificationSent
+                ? "UDAAN account created. Verification email sent 📧"
+                : "UDAAN account successfully created 🚀",
+            verificationSent,
             user
         });
 
@@ -117,6 +141,259 @@ app.post('/api/signup', async (req, res) => {
         res.status(400).json({
             success: false,
             message: error.message
+        });
+    }
+});
+
+
+app.post('/api/email/send-verification', requireAuth, async (req, res) => {
+    try {
+        const fs = require('fs');
+        const users = JSON.parse(fs.readFileSync('./users.json', 'utf8'));
+        const user = users.find(u => u.username === req.user.username);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        if (!user.email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please add an email address first'
+            });
+        }
+
+        if (user.emailVerified) {
+            return res.json({
+                success: true,
+                message: 'Email is already verified'
+            });
+        }
+
+        await sendVerificationEmail(user);
+
+        res.json({
+            success: true,
+            message: 'Verification email sent 📧'
+        });
+    } catch (error) {
+        console.error('Send verification error:', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Unable to send verification email'
+        });
+    }
+});
+
+app.get('/api/email/verify', (req, res) => {
+    try {
+        const result = verifyEmail(
+            String(req.query.token || '')
+        );
+
+        if (!result.success) {
+            return res.status(400).send(`
+                <h2>UDAAN Email Verification Failed</h2>
+                <p>${result.message}</p>
+            `);
+        }
+
+        res.send(`
+            <html>
+            <head>
+                <title>UDAAN Email Verified</title>
+                <meta name="viewport" content="width=device-width,initial-scale=1">
+            </head>
+            <body style="font-family:Arial;text-align:center;padding:60px">
+                <h1>✅ Email Verified</h1>
+                <p>Your UDAAN email has been successfully verified.</p>
+                <a href="/profile.html">Open UDAAN</a>
+            </body>
+            </html>
+        `);
+    } catch (error) {
+        console.error('Email verification error:', error);
+        res.status(500).send('Email verification failed');
+    }
+});
+
+
+// ==================== EMAIL ACCOUNT SETTINGS ====================
+
+app.get('/api/account/email', requireAuth, (req, res) => {
+    try {
+        const users = fs.existsSync('./users.json')
+            ? JSON.parse(fs.readFileSync('./users.json', 'utf8'))
+            : [];
+
+        const user = users.find(
+            u => u.username === req.user.username
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            email: user.email || '',
+            emailVerified: user.emailVerified === true,
+            emailVerifiedAt: user.emailVerifiedAt || null,
+            country: user.country || '',
+            dataRegion: user.dataRegion || 'GLOBAL'
+        });
+    } catch (error) {
+        console.error('Email account load error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Unable to load email settings'
+        });
+    }
+});
+
+app.post('/api/account/email', requireAuth, async (req, res) => {
+    try {
+        const email = String(req.body.email || '')
+            .trim()
+            .toLowerCase();
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email address is required'
+            });
+        }
+
+        const emailPattern =
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailPattern.test(email)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please enter a valid email address'
+            });
+        }
+
+        const users = fs.existsSync('./users.json')
+            ? JSON.parse(fs.readFileSync('./users.json', 'utf8'))
+            : [];
+
+        const user = users.find(
+            u => u.username === req.user.username
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        const emailOwner = users.find(
+            u =>
+                u.email &&
+                String(u.email).toLowerCase() === email &&
+                u.username !== user.username
+        );
+
+        if (emailOwner) {
+            return res.status(409).json({
+                success: false,
+                message: 'This email is already linked to another UDAAN account'
+            });
+        }
+
+        user.email = email;
+        user.emailVerified = false;
+        user.emailVerificationTokenHash = null;
+        user.emailVerificationExpiresAt = null;
+        user.emailVerifiedAt = null;
+
+        fs.writeFileSync(
+            './users.json',
+            JSON.stringify(users, null, 2)
+        );
+
+        let verificationSent = false;
+
+        try {
+            await sendVerificationEmail(user);
+            verificationSent = true;
+        } catch (mailError) {
+            console.error(
+                'Verification email send error:',
+                mailError.message
+            );
+        }
+
+        res.json({
+            success: true,
+            message: verificationSent
+                ? 'Email linked and verification email sent 📧'
+                : 'Email linked. Email service is not configured yet.',
+            email: user.email,
+            emailVerified: false,
+            verificationSent
+        });
+    } catch (error) {
+        console.error('Email linking error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Unable to link email'
+        });
+    }
+});
+
+app.post('/api/account/email/resend', requireAuth, async (req, res) => {
+    try {
+        const users = fs.existsSync('./users.json')
+            ? JSON.parse(fs.readFileSync('./users.json', 'utf8'))
+            : [];
+
+        const user = users.find(
+            u => u.username === req.user.username
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        if (!user.email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please link an email address first'
+            });
+        }
+
+        if (user.emailVerified) {
+            return res.json({
+                success: true,
+                message: 'Email is already verified'
+            });
+        }
+
+        await sendVerificationEmail(user);
+
+        res.json({
+            success: true,
+            message: 'Verification email sent again 📧'
+        });
+    } catch (error) {
+        console.error('Resend verification error:', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Unable to send verification email'
         });
     }
 });

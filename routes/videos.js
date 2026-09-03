@@ -141,6 +141,17 @@ router.post('/upload', requireAuth, upload.single('video'), async (req, res) => 
             views: 0,
             watchMinutes: 0,
             tokens: 0,
+
+            // Content moderation pipeline
+            moderationStatus: 'pending_moderation',
+            moderationResult: null,
+            moderationReason: null,
+            moderatedAt: null,
+
+            // Country/data residency metadata
+            uploaderCountry: req.user.country || '',
+            dataRegion: req.user.dataRegion || 'GLOBAL',
+
             qualities: {
                 original: `/uploads/${req.file.filename}`
             }
@@ -182,7 +193,7 @@ router.post('/upload', requireAuth, upload.single('video'), async (req, res) => 
 
         res.json({
             success: true,
-            message: 'Video uploaded successfully 🚀',
+            message: 'Video uploaded and sent for moderation 🚀',
             video: video
         });
 

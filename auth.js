@@ -25,7 +25,7 @@ function saveUsers(users) {
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
-async function signup(name, username, password) {
+async function signup(name, username, password, email = '', country = '') {
     const users = getUsers();
 
     if (users.some(u => u.username === username)) {
@@ -39,6 +39,13 @@ async function signup(name, username, password) {
         name,
         username,
         password: hashedPassword,
+        email: String(email || '').trim().toLowerCase(),
+        emailVerified: false,
+        emailVerificationTokenHash: null,
+        emailVerificationExpiresAt: null,
+        emailVerifiedAt: null,
+        country: String(country || '').trim().toUpperCase(),
+        dataRegion: String(country || '').trim().toUpperCase() === 'IN' ? 'IN' : 'GLOBAL',
         subscribers: 0,
         watch_minutes: 0,
         tokens: 0,
@@ -51,7 +58,11 @@ async function signup(name, username, password) {
     return {
         id: user.id,
         name: user.name,
-        username: user.username
+        username: user.username,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        country: user.country,
+        dataRegion: user.dataRegion
     };
 }
 

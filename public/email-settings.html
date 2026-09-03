@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Email Settings - UDAAN</title>
+<link rel="stylesheet" href="/email-settings.css">
+</head>
+<body>
+
+<div class="page">
+
+    <header class="topbar">
+        <button class="back" onclick="history.back()">‹</button>
+        <div>
+            <h1>Email & Security</h1>
+            <p>Secure your UDAAN account</p>
+        </div>
+    </header>
+
+    <main>
+
+        <section class="card">
+            <div class="icon">✉️</div>
+
+            <h2>Email Address</h2>
+            <p class="muted">
+                Link your email to secure your account and recover access.
+            </p>
+
+            <div id="status" class="status"></div>
+
+            <label for="email">Email address</label>
+
+            <input
+                id="email"
+                type="email"
+                autocomplete="email"
+                placeholder="yourname@gmail.com"
+            >
+
+            <button id="saveBtn" class="primary">
+                Link Email
+            </button>
+
+            <button id="resendBtn" class="secondary" hidden>
+                Resend Verification Email
+            </button>
+
+            <div id="verifiedBox" class="verified" hidden>
+                ✓ Email Verified
+            </div>
+        </section>
+
+        <section class="card security">
+            <h2>Account Security</h2>
+
+            <div class="security-row">
+                <span>Email verification</span>
+                <strong id="verifyState">Not verified</strong>
+            </div>
+
+            <div class="security-row">
+                <span>Data region</span>
+                <strong id="region">GLOBAL</strong>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script src="/email-settings.js"></script>
+</body>
+</html>

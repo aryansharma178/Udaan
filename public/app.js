@@ -2,6 +2,10 @@ const form = document.getElementById('authForm');
 const title = document.getElementById('title');
 const nameBox = document.getElementById('nameBox');
 const nameInput = document.getElementById('name');
+const emailBox = document.getElementById('emailBox');
+const emailInput = document.getElementById('email');
+const countryBox = document.getElementById('countryBox');
+const countryInput = document.getElementById('country');
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const submitBtn = document.getElementById('submitBtn');
@@ -18,6 +22,8 @@ switchBtn.addEventListener('click', () => {
     submitBtn.textContent = isSignup ? 'Sign Up' : 'Login';
 
     nameBox.classList.toggle('hidden', !isSignup);
+    emailBox.classList.toggle('hidden', !isSignup);
+    countryBox.classList.toggle('hidden', !isSignup);
 
     switchText.textContent = isSignup
         ? 'Already have an account?'
@@ -40,6 +46,8 @@ form.addEventListener('submit', async (e) => {
 
     if (isSignup) {
         data.name = nameInput.value.trim();
+        data.email = emailInput.value.trim();
+        data.country = countryInput.value;
     }
 
     const endpoint = isSignup

@@ -197,3 +197,14 @@
         setup();
     }
 })();
+
+/* Email & Security */
+(function setupEmailSettings() {
+    const btn = document.getElementById('emailSettingsBtn');
+
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+        window.location.href = '/email-settings.html';
+    });
+})();
